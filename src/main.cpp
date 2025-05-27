@@ -26,12 +26,6 @@ void setup() {
 
   mqttManager.init();
 
-  Coordinates location;
-  location.x = 8;
-  location.y = 10;
-  MqttTopic topic(generateGuid(), location);
-
-  mqttManager.submit(topic);
 }
 
 void loop() {
