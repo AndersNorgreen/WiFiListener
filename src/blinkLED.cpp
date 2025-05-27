@@ -13,3 +13,13 @@ void blinkLED(int pin,  unsigned long duration) {
             current = millis();
         }
 }
+
+void ledOn(int pin) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
+}
+
+void ledOff(int pin) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+}

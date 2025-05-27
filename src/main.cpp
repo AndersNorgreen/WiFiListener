@@ -6,9 +6,8 @@
 */
 #include <esp_now.h>
 #include <WiFi.h>
-#include "blinkLED.h"
+#include "LEDhandler.h"
 #include "timeHandler.h"
-
 
 const char* ssid = "IoT_H3/4";
 const char* password = "98806829";
@@ -20,16 +19,25 @@ const int   daylightOffset_sec = 3600;
 WiFiClient espClient;
 //PubSubClient client(espClient);
 
-// REPLACE WITH YOUR RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0xCC, 0xDB, 0xA7, 0x1C ,0xA8, 0x6C}; // esp 04
 uint8_t broadcastAddress1[] = {0xCC, 0xDB, 0xA7, 0x12 ,0x51, 0x0C}; // esp 01
 uint8_t broadcastAddress2[] = {0xCC, 0xDB, 0xA7, 0x1E ,0x1F, 0x18}; // esp 02
+uint8_t broadcastAddress3[] = {0xCC, 0xDB, 0xA7, 0x1D ,0xFD, 0xFC}; // esp 03
+uint8_t broadcastAddress4[] = {0xCC, 0xDB, 0xA7, 0x1C ,0xA8, 0x6C}; // esp 04
 
+// create an array of broadcast addresses
+uint8_t broadcastAddresses[4][6] = { 
+  {0xCC, 0xDB, 0xA7, 0x12, 0x51, 0x0C}, 
+  {0xCC, 0xDB, 0xA7, 0x1E, 0x1F, 0x18}, 
+  {0xCC, 0xDB, 0xA7, 0x1D, 0xFD, 0xFC}, 
+  {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C} 
+};
+
+int myMacIndex = -1;
 
 // Structure example to send data
 // Must match the receiver structure
 typedef struct struct_message {
-  char time[20];
+  char id[20];
   uint8_t macAddress[6];
 } struct_message;
 
@@ -40,7 +48,6 @@ struct_message incomingReadings;
 // Variables to hold incoming data
 String incomingTime;
 uint8_t incomingMacAddress[6];
-
 
 esp_now_peer_info_t peerInfo;
 
@@ -54,7 +61,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
   Serial.print("Bytes received: ");
   Serial.println(len);
-  incomingTime = String(incomingReadings.time);
+  incomingTime = String(incomingReadings.id);
   memcpy(incomingMacAddress, incomingReadings.macAddress, 6);
 
   Serial.print("Packet received from: ");
@@ -69,13 +76,29 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   Serial.println(sizeof(incomingReadings));
   Serial.println("Data received successfully.");
 }
+
+int getMyIndexInList() {
+    uint8_t myMac[6];
+    WiFi.macAddress(myMac);
+    for (int i = 0; i < 4; i++) {
+        bool match = true;
+        for (int j = 0; j < 6; j++) {
+            if (broadcastAddresses[i][j] != myMac[j]) {
+                match = false;
+                break;
+            }
+        }
+        if (match) return i;
+    }
+    return -1; // Not found
+}
  
 void setup() {
   // Init Serial Monitor
   Serial.begin(115200);
 
   // Connect to WiFi
-  //client.setServer(mqtt_server, 1883);
+  // client.setServer(mqtt_server, 1883);
   Serial.print("Connecting to ");
   Serial.println(ssid);
   WiFi.begin(ssid, password);
@@ -84,11 +107,15 @@ void setup() {
       Serial.print(".");
       blinkLED(2, 1000);
   }
-  
+
   Serial.println("");
   Serial.println("WiFi connected.");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  myMacIndex = getMyIndexInList();
+  Serial.print("My MAC index in list: ");
+  Serial.println(myMacIndex);
   
   // Set up ntp server for time synchronization
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -108,35 +135,69 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
   
   // Register peer
-  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-  peerInfo.channel = 0;  
-  peerInfo.encrypt = false;
-  
-  // Add peer        
-  if (esp_now_add_peer(&peerInfo) != ESP_OK){
-    Serial.println("Failed to add peer");
-    return;
-  }
+
+  int lenght = sizeof(broadcastAddresses) / sizeof(broadcastAddresses[0]);
+  for (int i = 0; i < lenght; i++) {
+    if (i == myMacIndex) continue; // Skip own MAC
+    memcpy(peerInfo.peer_addr, broadcastAddresses[i], 6);
+    peerInfo.channel = 0;
+    peerInfo.encrypt = false;
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+        Serial.print("Failed to add peer: ");
+        for (int j = 0; j < 6; j++) {
+            Serial.printf("%02X", broadcastAddresses[i][j]);
+            if (j < 5) Serial.print(":");
+        }
+        Serial.println();
+    }
+}
 
   esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 }
  
 void loop() {
   // Set values to send
-  strcpy(myData.time, getTimeString().c_str());
-  // Send the MAC address of the wifi router
-  memcpy(myData.macAddress, WiFi.BSSID(), 6);
+  strcpy(myData.id, getTimeString().c_str());
+  // Send the esp MAC address of the wifi router
+  WiFi.macAddress(myData.macAddress);
+  // Alternatively, you can use the following line to send the MAC address of the Wifi router:
+  //memcpy(myData.macAddress, WiFi.BSSID(), 6);
 
-  // Print values to Serial Monitor
-  // Serial.print("Date: ");
-  // printLocalTime();
+  //Print values to Serial Monitor
+  Serial.print("Date: ");
+  printLocalTime();
   
-  // Send message via ESP-NOW
-  //esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &myData, sizeof(myData));
+  //Send message via ESP-NOW
+  int lenght = sizeof(broadcastAddresses) / sizeof(broadcastAddresses[0]); // Get the number of broadcast addresses
+  // Serial.print("Number of broadcast addresses: ");
+  // Serial.println(lenght);
+  for (int i = 0; i < lenght; i++)
+  {
+    if (i == myMacIndex) continue;
 
-  // print my data
+    esp_err_t result = esp_now_send(broadcastAddresses[i], (uint8_t *) &myData, sizeof(myData));
+    Serial.print("Sending data to: ");
+    for (int j = 0; j < 6; j++) {
+      Serial.printf("%02X", broadcastAddresses[i][j]);
+      if (j < 5) Serial.print(":");
+    }
+    if (result == ESP_OK) 
+    {
+      Serial.print(" Sent with success to: ");
+      for (int j = 0; j < 6; j++) {
+        Serial.printf("%02X", broadcastAddresses[i][j]);
+        if (j < 5) Serial.print(":");
+      }
+      Serial.println();
+    }
+    else {
+      Serial.println(" Error sending the data");
+    }
+  }
+  
+  //print my data
   // Serial.print("Time: ");
-  // Serial.println(myData.time);
+  // Serial.println(myData.id);
   // Serial.print("MAC Address: ");
   // for (int i = 0; i < 6; i++) {
   //   Serial.printf("%02X", myData.macAddress[i]);
@@ -145,12 +206,6 @@ void loop() {
   // Serial.println();
   // Serial.print("Size of myData: ");
   // Serial.println(sizeof(myData));
-   
-  // if (result == ESP_OK) {
-  //   Serial.println("Sent with success");
-  // }
-  // else {
-  //   Serial.println("Error sending the data");
-  // }
+
   delay(2000);
 }
