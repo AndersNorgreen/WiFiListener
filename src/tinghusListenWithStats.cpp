@@ -1,4 +1,4 @@
-#include <Arduino.h>
+/* #include <Arduino.h>
 #include <WiFi.h>
 #include "esp_wifi.h"
 #include <map>
@@ -71,4 +71,4 @@ void loop() {
         lastPrint = millis();
     }
     delay(1000);
-}
+} */
