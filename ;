@@ -1,17 +1,16 @@
 #include <Arduino.h>
 #include <helpers.h>
 #include <server/serverManager.h>
-#include <mqtt/mqttManager.h>
+
 #include "config.h"
 #include "server/wifiConfig.h"
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
-MqttManager mqttManager;
 
 void setup() {
   Serial.begin(115200);
-  randomSeed(esp_random()); // Helps generate GUIDs
+  randomSeed(analogRead(0)); // Helps generate GUIDs
 
   initLittleFS();
   
@@ -24,15 +23,10 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
-  mqttManager.init();
-
-  Coordinates location;
-  location.x = 8;
-  location.y = 10;
-  MqttTopic topic(generateGuid(), location);
-
-  mqttManager.submit(topic);
+  String guid = generateGuid();
+  Serial.println("Generated GUID: " + guid);
 }
 
 void loop() {
 }
+// C4A95AFD-7CB5-A9A6-A638-7F5D7C3F2525

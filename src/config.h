@@ -4,6 +4,16 @@
 #define CURRENT_API_IP "192.168.0.200" // ??
 #define CURRENT_GATEWAY "192.168.0.1" // ??
 
+
+// MQTT Server
+//#define MQTT_SERVER "mosquitto.eclipse"
+#define MQTT_SERVER "192.168.0.130"
+#define MQTT_PORT 1883
+#define MQTT_USER "device02"
+#define MQTT_PASSWORD "device02-password"
+#define MQTT_CLIENT_ID "ESP32Client"
+#define MQTT_TOPIC "sensor/device02/SnifferBoys"
+
 // LittleFS paths
 #define SSID_PATH "/ssid.txt"
 #define PASSWORD_PATH "/pass.txt"

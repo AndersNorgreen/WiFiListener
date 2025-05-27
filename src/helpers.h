@@ -14,6 +14,8 @@ void initTime();
 void initLittleFS();
 void listFiles(const char* dir);
 
+String generateGuid();
+
 String readFile(fs::FS &fs, const char * path);
 
 struct timeInitializationData {
