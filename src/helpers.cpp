@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "LittleFS.h"
 #include <WiFi.h>
-#include <wifiConfig.h>
+#include <server/wifiConfig.h>
 #include "time.h"
 #include "config.h"
 
@@ -17,6 +17,22 @@ void initLittleFS() {
     Serial.println("An error has occurred while mounting LittleFS");
   }
   Serial.println("LittleFS mounted successfully");
+}
+
+String generateGuid() {
+    char guid[37]; // UUID format: 8-4-4-4-12
+    const char *hex_chars = "0123456789ABCDEF";
+
+    for (int i = 0; i < 36; ++i) {
+        if (i == 8 || i == 13 || i == 18 || i == 23) {
+            guid[i] = '-';
+        } else {
+            guid[i] = hex_chars[random(0, 16)];
+        }
+    }
+    guid[36] = '\0';
+
+    return String(guid);
 }
 
 String readFile(fs::FS &fs, const char * path) {

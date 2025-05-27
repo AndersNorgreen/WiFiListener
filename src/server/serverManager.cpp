@@ -1,4 +1,4 @@
-#include <serverManager.h>
+#include <server/serverManager.h>
 
 ServerManager::ServerManager() : server(80), endpoints(server), config() {};
 

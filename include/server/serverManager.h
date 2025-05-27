@@ -5,8 +5,8 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
-#include <wifiConfig.h>
-#include <endpointManager.h>
+#include <server/wifiConfig.h>
+#include <server/endpointManager.h>
 #include "config.h"
 
 class ServerManager {
