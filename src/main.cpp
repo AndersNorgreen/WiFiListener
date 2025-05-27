@@ -27,6 +27,7 @@ void setup() {
   serverManager.initServer();
 
   idGenerator.initId();
+  int ID = idGenerator.getRandomID();
 
   mqttManager.init();
 
