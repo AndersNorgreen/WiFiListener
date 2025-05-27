@@ -2,12 +2,14 @@
 #include <helpers.h>
 #include <server/serverManager.h>
 #include <mqtt/mqttManager.h>
+#include <idGenerator.h>
 #include "config.h"
 #include "server/wifiConfig.h"
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
+IdGenerator idGenerator;
 
 void setup() {
   Serial.begin(115200);
@@ -23,6 +25,9 @@ void setup() {
   
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
+
+  idGenerator.initId();
+  int ID = idGenerator.getRandomID();
 
   mqttManager.init();
 
