@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <helpers.h>
-#include <serverManager.h>
+#include <server/serverManager.h>
 
 #include "config.h"
-#include "wifiConfig.h"
+#include "server/wifiConfig.h"
 
 ServerManager serverManager;
 WifiConfig wifiConfig;

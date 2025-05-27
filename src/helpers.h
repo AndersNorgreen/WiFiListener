@@ -3,7 +3,7 @@
 
 #include <Arduino.h> 
 #include "LittleFS.h"
-#include <wifiConfig.h>
+#include <./server/wifiConfig.h>
 
 void writeFile(fs::FS &fs, const char * path, const char * message);
 void updateFile(fs::FS &fs, const char * path, const char * message);
