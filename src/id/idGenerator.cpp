@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <idGenerator.h>
+#include <id/idGenerator.h>
 
 uint32_t IdGenerator::getRandomID() {
   return currentId;
@@ -10,10 +10,10 @@ void IdGenerator::initId() {
     randomSeed(esp_random());  // Better randomness using ESP32 hardware RNG
     currentId = random(1, 1000001);
     Serial.printf("Generated ID: %u\n", currentId);
-    checkId();
+    //checkId();
 }
 
-void IdGenerator::checkId() {
+/*void IdGenerator::checkId() {
     while (true) {
         Serial.println("Type 'n' to generate a new ID. Type 'a' to get the current ID.");
 
@@ -39,4 +39,4 @@ void IdGenerator::checkId() {
             Serial.println("Invalid input. Please type 'n' or 'a'.");
         }
     }
-}
+}*/
