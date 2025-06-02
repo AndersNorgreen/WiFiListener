@@ -2,8 +2,9 @@
 #include <WiFi.h>
 #include <formatHandler.h>
 #include <esp_wifi.h>
+#include <struct_message.h>
 
-String maclist[128][3]; // 0 = MAC address, 1 = TTL, 2 = ONLINE/OFFLINE
+String maclist[128][6]; // 0 = MAC address, 1 = TTL, 2 = ONLINE/OFFLINE, 3 = Channel, 4 = RSSI, 5 = Timestamp
 String defaultTTL = "60"; // Maximum time (Apx seconds) elapsed before device is consirded offline
 int listcount = 0;
 #define maxCh 13 //max Channel -> US = 11, EU = 13, Japan = 14
@@ -87,12 +88,17 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where pack
     //Serial.println(mac);
     int rssi = p->rx_ctrl.rssi;
     String timestamp = String(p->rx_ctrl.timestamp);
-      Serial.print("MAC: ");
-      Serial.print(mac);
-      Serial.print(" RSSI: ");
-      Serial.print(rssi);
-      Serial.print(" Timestamp: ");
-      Serial.println(timestamp);
+    Serial.print("MAC: ");
+    Serial.print(mac);
+    Serial.print(" RSSI: ");
+    Serial.print(rssi);
+    Serial.print(" Timestamp: ");
+    Serial.println(timestamp);
+    
+    maclist[listcount][3] = String(curChannel); // This is the channel the device was found on
+    maclist[listcount][4] = String(rssi); // This is the RSSI of the device
+    maclist[listcount][5] = timestamp; // This is the timestamp of when the device was found
+
 
     //   WifiMgmtHdr *hdr = (WifiMgmtHdr*)p->payload;
     //   String srcMac = String((char*)hdr->sa.mac, 6);

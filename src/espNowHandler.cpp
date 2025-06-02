@@ -7,15 +7,18 @@
 struct_message myData;
 struct_message incomingReadings;
 
+struct_sniff_message sniffData;
+struct_sniff_message incomingSniffData;
+
 String incomingTime;
 uint8_t incomingMacAddress[6];
 
 esp_now_peer_info_t peerInfo;
 
-uint8_t broadcastAddress1[] = {0xCC, 0xDB, 0xA7, 0x12 ,0x51, 0x0C}; // esp 01
-uint8_t broadcastAddress2[] = {0xCC, 0xDB, 0xA7, 0x1E ,0x1F, 0x18}; // esp 02
-uint8_t broadcastAddress3[] = {0xCC, 0xDB, 0xA7, 0x1D ,0xFD, 0xFC}; // esp 03
-uint8_t broadcastAddress4[] = {0xCC, 0xDB, 0xA7, 0x1C ,0xA8, 0x6C}; // esp 04
+// uint8_t broadcastAddress1[] = {0xCC, 0xDB, 0xA7, 0x12 ,0x51, 0x0C}; // esp 01
+// uint8_t broadcastAddress2[] = {0xCC, 0xDB, 0xA7, 0x1E ,0x1F, 0x18}; // esp 02
+// uint8_t broadcastAddress3[] = {0xCC, 0xDB, 0xA7, 0x1D ,0xFD, 0xFC}; // esp 03
+// uint8_t broadcastAddress4[] = {0xCC, 0xDB, 0xA7, 0x1C ,0xA8, 0x6C}; // esp 04
 
 // create an array of broadcast addresses
 uint8_t broadcastAddresses[4][6] = { 
@@ -77,7 +80,32 @@ void buildMessage() {
   // memcpy(myData.macAddress, WiFi.BSSID(), 6);
 }
 
-void broadCastMessage(){
+void sendSniffMessage(const struct_sniff_message &sniffMsg, uint8_t masterAddress[6] ) {
+    if (!masterAddress) {
+      Serial.println("masterAddress is null!");
+      return;
+  }
+  esp_err_t result = esp_now_send(masterAddress, (uint8_t *) &sniffMsg, sizeof(sniffMsg));
+  Serial.print("Sending sniff data to: ");
+  for (int j = 0; j < 6; j++) {
+    Serial.printf("%02X", masterAddress[j]);
+    if (j < 5) Serial.print(":");
+  }
+  if (result == ESP_OK) 
+  {
+    Serial.print(" Sent with success to: ");
+    for (int j = 0; j < 6; j++) {
+      Serial.printf("%02X", masterAddress[j]);
+      if (j < 5) Serial.print(":");
+    }
+    Serial.println();
+  }
+  else {
+    Serial.println(" Error sending the sniff data");
+  }
+}
+
+void broadcastMessage(){
   int lenght = sizeof(broadcastAddresses) / sizeof(broadcastAddresses[0]); // Get the number of broadcast addresses
   for (int i = 0; i < lenght; i++)
   {
@@ -106,7 +134,8 @@ void broadCastMessage(){
 
 void setupEspNow() {
   myMacIndex = getMyIndexInList();
-
+  WiFi.mode(WIFI_STA);
+  
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");

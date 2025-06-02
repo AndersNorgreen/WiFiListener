@@ -9,12 +9,17 @@
 #include "server/wifiConfig.h"
 #include "triangulationService.h"
 #include <WiFi.h>
+#include <sniffAndSendService.h>
+#include <espNowHandler.h>
+#include <sniffer.h>
+#include <esp_wifi.h>
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
 TriangulationService triangulationService;
 IdRoleManager idRoleManager;
+SniffAndSendService sniffAndSendService;
 
 void setup() {
   Serial.begin(115200);
@@ -31,7 +36,7 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
-  mqttManager.init();
+  //mqttManager.init();
 
 
   // Example usage of triangulationService
@@ -42,7 +47,17 @@ void setup() {
       Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
   }
 
+  setUpEspWiFi();
+  setupEspNow();
+  esp_wifi_set_promiscuous(false); 
 }
 
 void loop() {
+  esp_wifi_set_promiscuous(true);
+  sniffAndSendService.sniff(1, 5000);
+  esp_wifi_set_promiscuous(false);
+
+  //TODO get the master address from the coordinated service
+  uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x12, 0x51, 0x0C};
+  sniffAndSendService.sendSniffMessages(masterAddress);
 }
