@@ -8,7 +8,6 @@
 #include "config.h"
 #include "server/wifiConfig.h"
 #include "triangulationService.h"
-#include <WiFi.h>
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
@@ -32,7 +31,6 @@ void setup() {
   serverManager.initServer();
 
   mqttManager.init();
-
 
   // Example usage of triangulationService
   triangulationService.enableMockData(true);

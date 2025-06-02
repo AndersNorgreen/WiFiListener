@@ -6,7 +6,7 @@
 
 EndpointManager::EndpointManager(AsyncWebServer& server) : server(server) {};
 
-DynamicJsonDocument doc(1024);
+JsonDocument doc;
 
 void onBody(AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total);
 
