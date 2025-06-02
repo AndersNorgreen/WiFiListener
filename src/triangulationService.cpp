@@ -1,34 +1,10 @@
 #include "triangulationService.h"
 #include <string.h>
-#include <esp32-hal.h> // For millis() to ensure compatibility with ESP32 we do not use Arduino.h directly
-#include <vector>
+#include <esp32-hal.h>
 #include <Arduino.h>
 #include <algorithm>
 
-struct DeviceTrackerInfo {
-    char mac[18];
-    bool isActive;
-    long lastSeenTimestamp;
-    DevicePosition position;
-};
-
-struct DeviceMeasurement {
-    char mac[18];
-    char trackerMac[18];
-    int rssi;
-    long timestamp;
-};
-
-const int MAX_TIME_DIFF_SECONDS = 10;
-const int MAX_TRACKING_LIFETIME_SECONDS = 60;
-const int MIN_REQUIRED_UNIQUE_TRACKERS = 3;
-
-static std::vector<DeviceTrackerInfo> deviceTrackers;
-static std::vector<DeviceMeasurement> deviceMeasurements;
-static std::vector<DeviceInfo> verifiedDevicePositions;
-static bool useMock = false;
-
-static void addMockData() {
+void TriangulationService::addMockData() {
     deviceTrackers.clear();
     deviceMeasurements.clear();
 
@@ -39,7 +15,6 @@ static void addMockData() {
     deviceTrackers.push_back(t2);
     deviceTrackers.push_back(t3);
 
-    // Simulate a device
     DeviceMeasurement m1 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:01", -40, millis()};
     DeviceMeasurement m2 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:02", -45, millis()};
     DeviceMeasurement m3 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:03", -50, millis()};
@@ -48,7 +23,7 @@ static void addMockData() {
     deviceMeasurements.push_back(m3);
 }
 
-void enableMockData(bool enable) {
+void TriangulationService::enableMockData(bool enable) {
     useMock = enable;
     if (useMock) {
         addMockData();
@@ -58,7 +33,7 @@ void enableMockData(bool enable) {
     }
 }
 
-void addOrUpdateDeviceTracker(const char* mac, const DevicePosition* position) {
+void TriangulationService::addOrUpdateDeviceTracker(const char* mac, const DevicePosition* position) {
     for (auto& tracker : deviceTrackers) {
         if (strcmp(tracker.mac, mac) == 0) {
             tracker.lastSeenTimestamp = millis();
@@ -82,7 +57,7 @@ void addOrUpdateDeviceTracker(const char* mac, const DevicePosition* position) {
     Serial.printf("[TRACKER] Added new tracker %s\n", mac);
 }
 
-static DeviceInfo* findOrCreateDeviceInfo(const char* mac) {
+DeviceInfo* TriangulationService::findOrCreateDeviceInfo(const char* mac) {
     for (auto& info : verifiedDevicePositions) {
         if (strcmp(info.mac, mac) == 0) return &info;
     }
@@ -94,7 +69,7 @@ static DeviceInfo* findOrCreateDeviceInfo(const char* mac) {
     return &verifiedDevicePositions.back();
 }
 
-static void removeDeviceInfo(const char* mac) {
+void TriangulationService::removeDeviceInfo(const char* mac) {
     verifiedDevicePositions.erase(
         std::remove_if(
             verifiedDevicePositions.begin(),
@@ -105,7 +80,7 @@ static void removeDeviceInfo(const char* mac) {
     );
 }
 
-static void clearDeviceMeasurementsFor(const char* deviceMac) {
+void TriangulationService::clearDeviceMeasurementsFor(const char* deviceMac) {
     deviceMeasurements.erase(
         std::remove_if(
             deviceMeasurements.begin(),
@@ -118,7 +93,7 @@ static void clearDeviceMeasurementsFor(const char* deviceMac) {
     );
 }
 
-static DevicePosition tryCalculateDevicePosition(const char* deviceMac) {
+DevicePosition TriangulationService::tryCalculateDevicePosition(const char* deviceMac) {
     long now = millis();
     std::vector<DeviceMeasurement> relevant;
     std::vector<std::string> uniqueTrackers;
@@ -162,7 +137,7 @@ static DevicePosition tryCalculateDevicePosition(const char* deviceMac) {
     return pos;
 }
 
-void addMeasurement(char deviceMac[18], char trackerMac[18], int rssi) {
+void TriangulationService::addMeasurement(char deviceMac[18], char trackerMac[18], int rssi) {
     long currentTime = millis();
     DeviceMeasurement newMeasurement;
     strncpy(newMeasurement.mac, deviceMac, sizeof(newMeasurement.mac));
@@ -196,7 +171,7 @@ void addMeasurement(char deviceMac[18], char trackerMac[18], int rssi) {
     }
 }
 
-const std::vector<DeviceInfo>& getDevicePositions(bool clearList) {
+const std::vector<DeviceInfo>& TriangulationService::getDevicePositions(bool clearList) {
     if (useMock) {
         addMockData();
         // Recalculate all mock device positions
@@ -213,7 +188,7 @@ const std::vector<DeviceInfo>& getDevicePositions(bool clearList) {
     return verifiedDevicePositions;
 }
 
-void clearDevicePositions() {
+void TriangulationService::clearDevicePositions() {
     verifiedDevicePositions.clear();
     Serial.println("Cleared all verified device positions.");
 }
