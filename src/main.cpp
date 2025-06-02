@@ -1,17 +1,20 @@
 #include <Arduino.h>
+#include <esp_now.h>
 #include <helpers.h>
 #include <server/serverManager.h>
 #include <mqtt/mqttManager.h>
-#include <idGenerator.h>
+#include <id/idGenerator.h>
+#include <id/idRoleManager.h>
 #include "config.h"
 #include "server/wifiConfig.h"
 #include "triangulationService.h"
+#include <WiFi.h>
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
 TriangulationService triangulationService;
-IdGenerator idGenerator;
+IdRoleManager idRoleManager;
 
 void setup() {
   Serial.begin(115200);
@@ -27,9 +30,6 @@ void setup() {
   
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
-
-  idGenerator.initId();
-  int ID = idGenerator.getRandomID();
 
   mqttManager.init();
 
