@@ -15,12 +15,7 @@ uint8_t incomingMacAddress[6];
 
 esp_now_peer_info_t peerInfo;
 
-// uint8_t broadcastAddress1[] = {0xCC, 0xDB, 0xA7, 0x12 ,0x51, 0x0C}; // esp 01
-// uint8_t broadcastAddress2[] = {0xCC, 0xDB, 0xA7, 0x1E ,0x1F, 0x18}; // esp 02
-// uint8_t broadcastAddress3[] = {0xCC, 0xDB, 0xA7, 0x1D ,0xFD, 0xFC}; // esp 03
-// uint8_t broadcastAddress4[] = {0xCC, 0xDB, 0xA7, 0x1C ,0xA8, 0x6C}; // esp 04
-
-// create an array of broadcast addresses
+// create an array of broadcast addresses, TODO get this from the coordinator service
 uint8_t broadcastAddresses[4][6] = { 
   {0xCC, 0xDB, 0xA7, 0x12, 0x51, 0x0C}, 
   {0xCC, 0xDB, 0xA7, 0x1E, 0x1F, 0x18}, 
@@ -36,23 +31,43 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
-  Serial.print("Bytes received: ");
-  Serial.println(len);
-  incomingTime = String(incomingReadings.id);
-  memcpy(incomingMacAddress, incomingReadings.macAddress, 6);
+  if (len == sizeof(struct_message)) {
+    memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
+    Serial.println("Received struct_message:");
+    incomingTime = String(incomingReadings.id);
+    memcpy(incomingMacAddress, incomingReadings.macAddress, 6);
 
-  Serial.print("Packet received from: ");
-  for (int i = 0; i < 6; i++) {
-    Serial.printf("%02X", incomingMacAddress[i]);
-    if (i < 5) Serial.print(":");
+    Serial.print("Packet received from: ");
+    for (int i = 0; i < 6; i++) {
+      Serial.printf("%02X", incomingMacAddress[i]);
+      if (i < 5) Serial.print(":");
+    }
+    Serial.println();
+    Serial.print("Time: ");
+    Serial.println(incomingTime);
+    Serial.print("Size of incomingReadings: ");
+    Serial.println(sizeof(incomingReadings));
+    Serial.println("Data received successfully.");
+  } else if (len == sizeof(struct_sniff_message)) {
+    memcpy(&incomingSniffData, incomingData, sizeof(incomingSniffData));
+    Serial.println("Received struct_sniff_message:");
+    // Print fields from incomingSniffData as needed
+    Serial.print("MAC: ");
+    for (int i = 0; i < 6; i++) {
+      Serial.printf("%02X", incomingSniffData.macAddress[i]);
+      if (i < 5) Serial.print(":");
+    }
+    Serial.println();
+    Serial.print("RSSI: ");
+    Serial.println(incomingSniffData.RSSI);
+    Serial.print("Channel: ");
+    Serial.println(incomingSniffData.channel);
+    Serial.print("Timestamp: ");
+    Serial.println(incomingSniffData.timestamp);
+  } else {
+    Serial.print("Unknown data size received: ");
+    Serial.println(len);
   }
-  Serial.println();
-  Serial.print("Time: ");
-  Serial.println(incomingTime);
-  Serial.print("Size of incomingReadings: ");
-  Serial.println(sizeof(incomingReadings));
-  Serial.println("Data received successfully.");
 }
 
 static int getMyIndexInList() {
@@ -135,7 +150,7 @@ void broadcastMessage(){
 void setupEspNow() {
   myMacIndex = getMyIndexInList();
   WiFi.mode(WIFI_STA);
-  
+
   // Init ESP-NOW
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");

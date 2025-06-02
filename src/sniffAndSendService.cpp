@@ -20,12 +20,21 @@ struct_sniff_message SniffAndSendService::buildSniffMessage(const uint8_t *macAd
 }
 
 void SniffAndSendService::sniff(int channel, int millisecs) {
-  setChannel(channel);
-  setUpdateDelay(millisecs);
-  scan();
+  SnifferService& snifferService = SnifferService::getInstance();
+  snifferService.setChannel(channel);
+  snifferService.setUpdateDelay(millisecs);
+  snifferService.scan();
+}
+
+void SniffAndSendService::sniffCycleChannels(int millisecs) {
+  SnifferService& snifferService = SnifferService::getInstance();
+  snifferService.setUpdateDelay(millisecs);
+  snifferService.cycleChannelsScan();
 }
 
 void SniffAndSendService::sendSniffMessages(uint8_t masterAddress[6]) {
+  SnifferService& snifferService = SnifferService::getInstance();
+  String (&maclist)[128][5] = snifferService.getMacList();
   int length = sizeof(maclist) / sizeof(maclist[0]);
   for (int i = 0; i < length; i++) {
     if (maclist[i][0] != "") {
@@ -33,8 +42,7 @@ void SniffAndSendService::sendSniffMessages(uint8_t masterAddress[6]) {
         (const uint8_t *)maclist[i][0].c_str(),
         maclist[i][4].c_str(),
         maclist[i][3].c_str(),
-        maclist[i][5].c_str()
-      );
+        maclist[i][5].c_str());
       sendSniffMessage(sniffMsg, masterAddress);
     }
   }

@@ -1,15 +1,27 @@
+#include "sniffer.h"
 #include <Arduino.h>
 #include <WiFi.h>
 #include <formatHandler.h>
 #include <esp_wifi.h>
 #include <struct_message.h>
 
-String maclist[128][6]; // 0 = MAC address, 1 = TTL, 2 = ONLINE/OFFLINE, 3 = Channel, 4 = RSSI, 5 = Timestamp
-String defaultTTL = "60"; // Maximum time (Apx seconds) elapsed before device is consirded offline
-int listcount = 0;
+// String maclist[128][5]; // 0 = MAC address, 1 = TTL, 2 = ONLINE/OFFLINE, 3 = Channel, 4 = RSSI, 5 = Timestamp
+// String defaultTTL = "60"; // Maximum time (Apx seconds) elapsed before device is consirded offline
+// int listcount = 0;
+// int curChannel = 1;
+// int updateDelay = 1000; // How long to wait before updating the list of devices
+
 #define maxCh 13 //max Channel -> US = 11, EU = 13, Japan = 14
-int curChannel = 1;
-int updateDelay = 1000; // How long to wait before updating the list of devices
+String SnifferService::maclist[128][5]; // 0 = MAC address, 1 = TTL, 2 = ONLINE/OFFLINE, 3 = Channel, 4 = RSSI, 5 = Timestamp
+String SnifferService::defaultTTL = "60"; // Maximum time (Apx seconds) elapsed before device is consirded offline
+int SnifferService::listcount = 0;
+int SnifferService::curChannel = 1;
+int SnifferService::updateDelay = 1000; // How long to wait before updating the list of devices
+
+SnifferService& SnifferService::getInstance() {
+    static SnifferService instance;
+    return instance;
+}
 
 //This should be its own thing.
 String KnownMac[10][2] = {  // Put devices you want to be reconized
@@ -43,7 +55,7 @@ typedef struct { // still dont know much about this
   unsigned char payload[];
 } __attribute__((packed)) WifiMgmtHdr;
 
-void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where packets end up after they get sniffed
+void SnifferService::sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where packets end up after they get sniffed
   wifi_promiscuous_pkt_t *p = (wifi_promiscuous_pkt_t*)buf; // Dont know what these 3 lines do
   int len = p->rx_ctrl.sig_len;
   WifiMgmtHdr *wh = (WifiMgmtHdr*)p->payload;
@@ -81,11 +93,10 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where pack
       added = 1;
     }
   }
-  
-  if(added == 0){ // If its new. add it to the array.
+
+  if(added == 0){
     maclist[listcount][0] = mac;
     maclist[listcount][1] = defaultTTL;
-    //Serial.println(mac);
     int rssi = p->rx_ctrl.rssi;
     String timestamp = String(p->rx_ctrl.timestamp);
     Serial.print("MAC: ");
@@ -116,7 +127,11 @@ void sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //This is where pack
   }
 }
 
-void setUpEspWiFi(){
+String (&SnifferService::getMacList())[128][5] {
+    return maclist;
+}
+
+void SnifferService::setUpEspWiFi(){
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   esp_wifi_init(&cfg);
   esp_wifi_set_storage(WIFI_STORAGE_RAM);
@@ -128,7 +143,7 @@ void setUpEspWiFi(){
   esp_wifi_set_channel(curChannel, WIFI_SECOND_CHAN_NONE);
 }
 
-void setChannel(int channel) {
+void SnifferService::setChannel(int channel) {
   if (channel < 1 || channel > maxCh) {
     Serial.println("Invalid channel. Please choose a channel between 1 and " + String(maxCh));
     return;
@@ -138,7 +153,7 @@ void setChannel(int channel) {
   Serial.println("Switched to channel: " + String(curChannel));
 }
 
-void bumpChannel() {
+void SnifferService::bumpChannel() {
   curChannel++;
   if (curChannel > maxCh) {
     curChannel = 1; // Wrap around to channel 1
@@ -147,7 +162,7 @@ void bumpChannel() {
   Serial.println("Bumped to channel: " + String(curChannel));
 }
 
-void purge(){ // This maanges the TTL
+void SnifferService::purge(){ // This maanges the TTL
   for(int i=0;i<=127;i++){
     if(!(maclist[i][0] == "")){
       int ttl = (maclist[i][1].toInt());
@@ -163,7 +178,7 @@ void purge(){ // This maanges the TTL
   }
 }
 
-void updatetime(){ // This updates the time the device has been online for
+void SnifferService::updatetime(){ // This updates the time the device has been online for
   for(int i=0;i<=63;i++){
     if(!(maclist[i][0] == "")){
       if(maclist[i][2] == "")maclist[i][2] = "0";
@@ -179,7 +194,7 @@ void updatetime(){ // This updates the time the device has been online for
   }
 }
 
-void showpeople(){ // This checks if the MAC is in the reckonized list and then displays it on the OLED and/or prints it to serial.
+void SnifferService::showpeople(){ // This checks if the MAC is in the reckonized list and then displays it on the OLED and/or prints it to serial.
   for(int i=0;i<=127;i++){
     String tmp1 = maclist[i][0];
     if(!(tmp1 == "")){
@@ -195,7 +210,7 @@ void showpeople(){ // This checks if the MAC is in the reckonized list and then 
   }
 }
 
-void setUpdateDelay(int delay) { // This sets the delay between updates
+void SnifferService::setUpdateDelay(int delay) { // This sets the delay between updates
   if (delay < 100) {
     Serial.println("Update delay too short, setting to 100ms");
     updateDelay = 100;
@@ -205,7 +220,7 @@ void setUpdateDelay(int delay) { // This sets the delay between updates
   Serial.println("Update delay set to: " + String(updateDelay) + "ms");
 }
 
-void scan() { // This scans for a given amount of time
+void SnifferService::scan() { // This scans for a given amount of time
   updatetime();
   showpeople();
   purge();
@@ -219,7 +234,8 @@ void scan() { // This scans for a given amount of time
   // }
 }
 
-void cycleChannelsScan() { // This scans for a given amount of time on each channel
+void  SnifferService::cycleChannelsScan() { // This scans for a given amount of time on each channel
   scan();
   bumpChannel();
 }
+

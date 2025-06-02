@@ -7,6 +7,7 @@
 class SniffAndSendService {
 public:
     void sniff(int channel, int millisecs);
+    void sniffCycleChannels(int millisecs);
     void sendSniffMessages(uint8_t masterAddress[6]);
 private:
     struct_sniff_message buildSniffMessage(const uint8_t *macAddress, const char *rssi, const char *channel, const char *timestamp);

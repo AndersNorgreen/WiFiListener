@@ -36,6 +36,7 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
+  // TODO get mqttServer running
   //mqttManager.init();
 
 
@@ -47,17 +48,19 @@ void setup() {
       Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
   }
 
-  setUpEspWiFi();
+  SnifferService& snifferService = SnifferService::getInstance();
+  snifferService.setUpEspWiFi();
   setupEspNow();
   esp_wifi_set_promiscuous(false); 
 }
 
 void loop() {
   esp_wifi_set_promiscuous(true);
-  sniffAndSendService.sniff(1, 5000);
+  //sniffAndSendService.sniff(1, 5000);
+  sniffAndSendService.sniffCycleChannels(5000);
   esp_wifi_set_promiscuous(false);
 
   //TODO get the master address from the coordinated service
-  uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x12, 0x51, 0x0C};
+  uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C}; 
   sniffAndSendService.sendSniffMessages(masterAddress);
 }
