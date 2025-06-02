@@ -20,6 +20,10 @@ public:
     void clearDevicePositions();
     void addMeasurement(char deviceMac[18], char trackerMac[18], int rssi);
 
+    static constexpr int MAX_TIME_DIFF_SECONDS = 10;
+    static constexpr int MAX_TRACKING_LIFETIME_SECONDS = 60;
+    static constexpr int MIN_REQUIRED_UNIQUE_TRACKERS = 3;
+
 private:
     struct DeviceTrackerInfo {
         char mac[18];

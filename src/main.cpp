@@ -5,10 +5,12 @@
 #include <idGenerator.h>
 #include "config.h"
 #include "server/wifiConfig.h"
+#include "triangulationService.h"
 
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
+TriangulationService triangulationService;
 IdGenerator idGenerator;
 
 void setup() {
@@ -30,6 +32,15 @@ void setup() {
   int ID = idGenerator.getRandomID();
 
   mqttManager.init();
+
+
+  // Example usage of triangulationService
+  triangulationService.enableMockData(true);
+  const auto& positions = triangulationService.getDevicePositions(false);
+  Serial.println("Device positions from triangulationService:");
+  for (const auto& info : positions) {
+      Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
+  }
 
 }
 
