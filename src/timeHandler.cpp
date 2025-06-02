@@ -1,5 +1,9 @@
 #include <Arduino.h>
 
+const char* ntpServer = "0.dk.pool.ntp.org";
+const long  gmtOffset_sec = 3600;
+const int   daylightOffset_sec = 3600;
+
 String getTimeString() {
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo)) {
@@ -13,4 +17,9 @@ String getTimeString() {
 
 void printLocalTime(){
   Serial.println(getTimeString());
+}
+
+void setupTime(){
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  printLocalTime();
 }
