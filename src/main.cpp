@@ -5,6 +5,7 @@
 #include <mqtt/mqttManager.h>
 #include <id/idGenerator.h>
 #include <id/idRoleManager.h>
+#include <cryptographyService.h>
 #include "config.h"
 #include "server/wifiConfig.h"
 #include "triangulationService.h"
@@ -20,6 +21,7 @@ MqttManager mqttManager;
 TriangulationService triangulationService;
 IdRoleManager idRoleManager;
 SniffAndSendService sniffAndSendService;
+CryptographyService cryptographyService;
 
 void setup() {
   Serial.begin(115200);
@@ -38,19 +40,26 @@ void setup() {
 
   // TODO get mqttServer running
   //mqttManager.init();
-
+  String hash = cryptographyService.hash("Hash mig!");
+  Serial.println("Hash: " + hash);
+  bool isVerified = cryptographyService.verifyHash("Hash mig!", hash);
+  Serial.println("Verified: " + String(isVerified));
+  String encrypted = cryptographyService.encrypt("Krypter mig!");
+  Serial.println("Kryptered: " + encrypted);
+  String decrypted = cryptographyService.decrypt(encrypted);
+  Serial.println("Dekrypteret: " + decrypted);
   // Example usage of triangulationService
-  triangulationService.enableMockData(true);
-  const auto& positions = triangulationService.getDevicePositions(false);
-  Serial.println("Device positions from triangulationService:");
-  for (const auto& info : positions) {
-      Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
-  }
-
-  SnifferService& snifferService = SnifferService::getInstance();
-  snifferService.setUpEspWiFi();
-  setupEspNow();
-  esp_wifi_set_promiscuous(false); 
+//  triangulationService.enableMockData(true);
+//  const auto& positions = triangulationService.getDevicePositions(false);
+//  Serial.println("Device positions from triangulationService:");
+//  for (const auto& info : positions) {
+//      Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
+//  }
+//
+//  SnifferService& snifferService = SnifferService::getInstance();
+//  snifferService.setUpEspWiFi();
+//  setupEspNow();
+//  esp_wifi_set_promiscuous(false); 
 }
 
 void loop() {
