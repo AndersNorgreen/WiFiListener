@@ -15,12 +15,10 @@ void TriangulationService::addMockData() {
     deviceTrackers.push_back(t2);
     deviceTrackers.push_back(t3);
 
-    DeviceMeasurement m1 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:01", -40, millis()};
-    DeviceMeasurement m2 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:02", -45, millis()};
-    DeviceMeasurement m3 = {"11:22:33:44:55:66", "AA:BB:CC:DD:EE:03", -50, millis()};
-    deviceMeasurements.push_back(m1);
-    deviceMeasurements.push_back(m2);
-    deviceMeasurements.push_back(m3);
+    // use addMeasurement instead of pushing directly
+    addMeasurement((char*)"11:22:33:44:55:66", (char*)"AA:BB:CC:DD:EE:01", -40);
+    addMeasurement((char*)"11:22:33:44:55:66", (char*)"AA:BB:CC:DD:EE:02", -45);
+    addMeasurement((char*)"11:22:33:44:55:66", (char*)"AA:BB:CC:DD:EE:03", -50);
 }
 
 void TriangulationService::enableMockData(bool enable) {

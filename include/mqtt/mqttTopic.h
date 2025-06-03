@@ -4,8 +4,8 @@
 #include <Arduino.h>
 
 struct Coordinates {
-  size_t x;
-  size_t y;
+  int x;
+  int y;
 };
 
 struct MqttTopic {
@@ -14,13 +14,13 @@ struct MqttTopic {
 
   String getSender() { return Sender; }
   Coordinates getLocation() { return Location; }
-  size_t getX() { return Location.x; }
-  size_t getY() { return Location.y; }
+  int getX() { return Location.x; }
+  int getY() { return Location.y; }
 
   void setSender(String sender) { Sender = sender; }
   void setLocation(Coordinates location) { Location = location; }
-  void setX(size_t x) { Location.x = x; }
-  void setY(size_t y) { Location.y = y; }
+  void setX(int x) { Location.x = x; }
+  void setY(int y) { Location.y = y; }
   private:
     String Sender;
     Coordinates Location;
