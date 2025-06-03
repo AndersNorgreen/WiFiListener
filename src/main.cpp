@@ -55,18 +55,21 @@ void setup() {
   SnifferService& snifferService = SnifferService::getInstance();
   snifferService.setUpEspWiFi();
   setupEspNow();
-  esp_wifi_set_promiscuous(false); 
+  esp_wifi_set_promiscuous(false);
 }
 
 bool roleChecked = false;
+String masterMac;
 
 void loop() {
-  int roleStatus = idRoleManager.checkAndCompareRoles();
+  int roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
   if (!roleChecked && roleStatus != -1) { 
         if (roleStatus == 1) {
             Serial.println("Yes, You are the Master!");
+            Serial.printf("Master MAC: %s\n", masterMac.c_str());
         } else if (roleStatus == 0) {
             Serial.println("No, You are NOT the Master!");
+            Serial.printf("Master MAC: %s\n", masterMac.c_str());
         }
         roleChecked = true;
     }
