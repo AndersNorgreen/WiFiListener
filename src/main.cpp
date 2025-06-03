@@ -39,14 +39,8 @@ void setup() {
   // TODO get mqttServer running
   //mqttManager.init();
 
-
-  // Example usage of triangulationService
-  triangulationService.enableMockData(true);
-  const auto& positions = triangulationService.getDevicePositions(false);
-  Serial.println("Device positions from triangulationService:");
-  for (const auto& info : positions) {
-      Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
-  }
+  String myMac = WiFi.macAddress();
+  idRoleManager.updateDeviceList(const_cast<char*>(myMac.c_str()), 0);
 
   SnifferService& snifferService = SnifferService::getInstance();
   snifferService.setUpEspWiFi();
@@ -63,4 +57,17 @@ void loop() {
   //TODO get the master address from the coordinated service
   uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C}; 
   sniffAndSendService.sendSniffMessages(masterAddress);
+
+  // Call the triangulation service to process measurements
+  idRoleManager.updateDeviceList("AA:BB:CC:DD:EE:FF", 1); // TODO: replace with actual values, mac: is mac address from the sniffer, id: is the device ID of the tracker sending the message
+  triangulationService.addMeasurement("AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66", -70); // TODO: replace with actual values
+
+  // TODO: add a timer so that this is not called every loop iteration
+  // If this device is the master, get device positions and send them to the MQTT broker
+  if (idRoleManager.isMaster()) { 
+    // get data from triangulationService and send it to the MQTT broker
+    const auto& devicePositions = triangulationService.getDevicePositions(true);
+
+    // TODO: send device positions to MQTT broker
+  }
 }
