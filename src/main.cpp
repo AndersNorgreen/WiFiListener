@@ -36,8 +36,12 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
-  // TODO get mqttServer running
-  //mqttManager.init();
+
+  idRoleManager.init();
+  delay(1000);
+  idRoleManager.manageRoles();
+
+  mqttManager.init();
 
 
   // Example usage of triangulationService
@@ -54,7 +58,20 @@ void setup() {
   esp_wifi_set_promiscuous(false); 
 }
 
+bool roleChecked = false;
+
 void loop() {
+  int roleStatus = idRoleManager.checkAndCompareRoles();
+  if (!roleChecked && roleStatus != -1) { 
+        if (roleStatus == 1) {
+            Serial.println("Yes, You are the Master!");
+        } else if (roleStatus == 0) {
+            Serial.println("No, You are NOT the Master!");
+        }
+        roleChecked = true;
+    }
+  delay(1000);
+
   esp_wifi_set_promiscuous(true);
   //sniffAndSendService.sniff(1, 5000);
   sniffAndSendService.sniffCycleChannels(5000);
@@ -63,4 +80,5 @@ void loop() {
   //TODO get the master address from the coordinated service
   uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C}; 
   sniffAndSendService.sendSniffMessages(masterAddress);
+
 }
