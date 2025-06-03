@@ -31,6 +31,10 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
+  idRoleManager.init();
+  delay(1000);
+  idRoleManager.manageRoles();
+
   mqttManager.init();
 
 
@@ -44,5 +48,17 @@ void setup() {
 
 }
 
+bool roleChecked = false;
+
 void loop() {
+  int roleStatus = idRoleManager.checkAndCompareRoles();
+  if (!roleChecked && roleStatus != -1) { 
+        if (roleStatus == 1) {
+            Serial.println("Yes, You are the Master!");
+        } else if (roleStatus == 0) {
+            Serial.println("No, You are NOT the Master!");
+        }
+        roleChecked = true;
+    }
+  delay(1000);
 }
