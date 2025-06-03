@@ -1,14 +1,8 @@
 // TEC
-//#define CURRENT_SSID "IoT_H3/4"
-//#define CURRENT_PASSWORD "98806829"
-//#define CURRENT_API_IP "192.168.0.200"
-//#define CURRENT_GATEWAY "192.168.0.1"
-
-// HOME
-#define CURRENT_SSID "1206"
-#define CURRENT_PASSWORD "m43q3swn_2"
-#define CURRENT_API_IP "192.168.50.200" // ??
-#define CURRENT_GATEWAY "192.168.50.1" // ??
+#define CURRENT_SSID "IoT_H3/4"
+#define CURRENT_PASSWORD "98806829"
+#define CURRENT_API_IP "192.168.0.200"
+#define CURRENT_GATEWAY "192.168.0.1"
 
 // MQTT Server
 //#define MQTT_SERVER "mosquitto.eclipse"
