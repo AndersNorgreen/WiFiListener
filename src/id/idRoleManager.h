@@ -11,7 +11,7 @@ class IdRoleManager{
     void init();
     void manageRoles();
     void updateDeviceInfoTracker(const char* mac, const char* id);
-    int checkAndCompareRoles();
+    int checkAndCompareRoles(String& masterMacAddress);
     void onDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 
     private:
@@ -21,6 +21,8 @@ class IdRoleManager{
     };
 
     void sendIdTo(const uint8_t* mac);
+    bool hasIdCollision();
+    void rerollAndBroadcastId();
 
     int receivedCount = 0;
     bool receivedFrom[4] = {false, false, false, false};
