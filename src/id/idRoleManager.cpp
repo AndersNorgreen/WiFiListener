@@ -6,6 +6,11 @@
 
 IdGenerator idGenerator;
 
+IdRoleManager& IdRoleManager::getInstance() {
+    static IdRoleManager instance;
+    return instance;
+}
+
 struct deviceInfoTrackerInfo {
     char mac[18];
     char id[20];

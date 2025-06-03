@@ -17,8 +17,6 @@
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
-TriangulationService triangulationService;
-IdRoleManager idRoleManager;
 SniffAndSendService sniffAndSendService;
 
 void setup() {
@@ -37,6 +35,7 @@ void setup() {
   serverManager.initServer();
 
 
+  IdRoleManager& idRoleManager = IdRoleManager::getInstance();
   idRoleManager.init();
   delay(1000);
   idRoleManager.manageRoles();
@@ -45,6 +44,7 @@ void setup() {
 
 
   // Example usage of triangulationService
+  TriangulationService& triangulationService = TriangulationService::getInstance();
   triangulationService.enableMockData(true);
   const auto& positions = triangulationService.getDevicePositions(false);
   Serial.println("Device positions from triangulationService:");
@@ -62,6 +62,7 @@ bool roleChecked = false;
 String masterMac;
 
 void loop() {
+  IdRoleManager& idRoleManager = IdRoleManager::getInstance();
   int roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
   if (!roleChecked && roleStatus != -1) { 
         if (roleStatus == 1) {
@@ -80,8 +81,26 @@ void loop() {
   sniffAndSendService.sniffCycleChannels(5000);
   esp_wifi_set_promiscuous(false);
 
-  //TODO get the master address from the coordinated service
-  uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C}; 
-  sniffAndSendService.sendSniffMessages(masterAddress);
+  uint8_t masterAddress[6] = {0};
+  // Convert masterMac string (format: "AA:BB:CC:DD:EE:FF") to uint8_t array
+  static bool masterAddressSet = false;
+  
+  if (!masterAddressSet) {
+    if (sscanf(masterMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+               &masterAddress[0], &masterAddress[1], &masterAddress[2],
+               &masterAddress[3], &masterAddress[4], &masterAddress[5]) == 6) {
+        masterAddressSet = true;
+    } else {
+        Serial.println("Invalid master MAC address format!");
+        Serial.printf("Master MAC: %s\n", masterMac.c_str());
+    }
+  }
 
+  uint8_t selfMac[6];
+  esp_read_mac(selfMac, ESP_MAC_WIFI_STA);
+  bool isOwnMac = memcmp(masterAddress, selfMac, 6) == 0;
+
+  if (masterAddressSet && !isOwnMac) {
+    sniffAndSendService.sendSniffMessages(masterAddress);
+  }
 }

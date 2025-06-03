@@ -4,8 +4,12 @@
 #include <Arduino.h>
 #include <algorithm>
 
-void TriangulationService::addMockData()
-{
+TriangulationService& TriangulationService::getInstance() {
+    static TriangulationService instance;
+    return instance;
+}
+
+void TriangulationService::addMockData() {
     deviceTrackers.clear();
     deviceMeasurements.clear();
 

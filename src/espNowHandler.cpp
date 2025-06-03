@@ -3,6 +3,8 @@
 #include <struct_message.h>
 #include <WiFi.h>
 #include <timeHandler.h>
+#include <triangulationService.h>
+#include "id/idRoleManager.h"
 
 struct_message myData;
 struct_message incomingReadings;
@@ -64,6 +66,18 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     Serial.println(incomingSniffData.channel);
     Serial.print("Timestamp: ");
     Serial.println(incomingSniffData.timestamp);
+    String masterMac;
+    IdRoleManager& idRoleManager = IdRoleManager::getInstance();
+    TriangulationService& triangulationService = TriangulationService::getInstance();
+    int roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
+    if (roleStatus == 1)
+    {
+      triangulationService.addMeasurement(
+        reinterpret_cast<char*>(incomingSniffData.macAddress), 
+        reinterpret_cast<char*>(incomingSniffData.device_macAddress), 
+        reinterpret_cast<int>(incomingSniffData.RSSI));
+    }
+
   } else {
     Serial.print("Unknown data size received: ");
     Serial.println(len);

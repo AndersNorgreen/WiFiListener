@@ -76,12 +76,13 @@ void SnifferService::sniffer(void* buf, wifi_promiscuous_pkt_type_t type) { //Th
   }
   mac.toUpperCase();
 
-  int frameType = (fctl & 0x0C) >> 2;
-  int frameSubType = (fctl & 0xF0) >> 4;
-  if (frameType == 0 && (frameSubType == 8 || frameSubType == 4 || frameSubType == 5)) {
-    String ssid = parseSSID(p->payload, p->rx_ctrl.sig_len, frameSubType);
-    Serial.println("SSID: " + ssid);
-  }
+  // trying to sniff wifi frames
+  // int frameType = (fctl & 0x0C) >> 2;
+  // int frameSubType = (fctl & 0xF0) >> 4;
+  // if (frameType == 0 && (frameSubType == 8 || frameSubType == 4 || frameSubType == 5)) {
+  //   String ssid = parseSSID(p->payload, p->rx_ctrl.sig_len, frameSubType);
+  //   Serial.println("SSID: " + ssid);
+  // }
 
   int added = 0;
   for(int i=0;i<=127;i++){ // checks if the MAC address has been added before
@@ -179,7 +180,7 @@ void SnifferService::purge(){ // This maanges the TTL
 }
 
 void SnifferService::updatetime(){ // This updates the time the device has been online for
-  for(int i=0;i<=63;i++){
+  for(int i=0;i<=127;i++){
     if(!(maclist[i][0] == "")){
       if(maclist[i][2] == "")maclist[i][2] = "0";
       if(!(maclist[i][2] == "OFFLINE")){

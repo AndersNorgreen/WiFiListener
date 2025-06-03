@@ -8,6 +8,8 @@
 
 class IdRoleManager{
     public:
+    static IdRoleManager& getInstance();
+
     void init();
     void manageRoles();
     void updateDeviceInfoTracker(const char* mac, const char* id);
@@ -15,6 +17,10 @@ class IdRoleManager{
     void onDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);
 
     private:
+    IdRoleManager() {} // Private constructor
+    IdRoleManager(const IdRoleManager&) = delete;
+    IdRoleManager& operator=(const IdRoleManager&) = delete;
+
     struct struct_message {
         char id[20];
         uint8_t macAddress[6];
