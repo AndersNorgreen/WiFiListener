@@ -3,6 +3,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include <id/idGenerator.h>
+#include <struct_message.h>
 
 IdGenerator idGenerator;
 
@@ -20,6 +21,15 @@ static deviceInfoTrackerInfo deviceInfoTracker[10];
 static int deviceCount = 0;
 
 static bool readyToCompare = false;
+
+bool& IdRoleManager::getReadyToCompare() {
+    return readyToCompare;
+}
+bool& IdRoleManager::setReadyToCompare(bool ready) {
+    readyToCompare = ready;
+    return readyToCompare;
+}
+
 static unsigned long comparisonStartTime = 0;
 
 void IdRoleManager::updateDeviceInfoTracker(const char* mac, const char* id) {
@@ -59,7 +69,13 @@ String macAddress = WiFi.macAddress();
 char myId[20];
 
 void IdRoleManager::sendIdTo(const uint8_t* mac) {
-    struct struct_message outMsg;
+    struct_message outMsg;
+    Serial.print("Look hweer lol : Sending ID to: ");
+    for (int i = 0; i < 6; i++) {
+        Serial.printf("%02X", mac[i]);
+        if (i < 5) Serial.print(":");
+    }
+    Serial.println();
 
     strncpy(outMsg.id, myId, sizeof(outMsg.id));
     WiFi.macAddress(outMsg.macAddress);

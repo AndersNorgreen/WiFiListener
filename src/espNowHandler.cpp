@@ -33,7 +33,22 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 }
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  Serial.print("Received data: ");
+  for (int i = 0; i < len; i++) {
+    Serial.printf("%02X", incomingData[i]);
+    if (i < len - 1) Serial.print(" ");
+  }
+  Serial.println();
+
   if (len == sizeof(struct_message)) {
+        IdRoleManager &idRoleManager = IdRoleManager::getInstance();
+    if (idRoleManager.getReadyToCompare()) {
+      Serial.println("Ready to compare roles, managing roles now...");
+    } else {
+      Serial.println("Not ready to compare roles, waiting...");
+      idRoleManager.manageRoles();
+    }
+
     memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
     Serial.println("Received struct_message:");
     incomingTime = String(incomingReadings.id);
@@ -50,6 +65,19 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
     Serial.print("Size of incomingReadings: ");
     Serial.println(sizeof(incomingReadings));
     Serial.println("Data received successfully.");
+
+    // handshake part
+    struct struct_message incomingMsg;
+    memcpy(&incomingMsg, incomingData, sizeof(incomingMsg));
+    char macStr[18];
+    snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+    Serial.printf("ID received from: %s - ID: %s\n", macStr, incomingMsg.id);
+
+    idRoleManager.updateDeviceInfoTracker(macStr, incomingMsg.id);
+    idRoleManager.setReadyToCompare(true);
+
   } else if (len == sizeof(struct_sniff_message)) {
     memcpy(&incomingSniffData, incomingData, sizeof(incomingSniffData));
     Serial.println("Received struct_sniff_message:");
@@ -59,24 +87,24 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
       Serial.printf("%02X", incomingSniffData.macAddress[i]);
       if (i < 5) Serial.print(":");
     }
-    Serial.println();
-    Serial.print("RSSI: ");
-    Serial.println(incomingSniffData.RSSI);
-    Serial.print("Channel: ");
-    Serial.println(incomingSniffData.channel);
-    Serial.print("Timestamp: ");
-    Serial.println(incomingSniffData.timestamp);
     String masterMac;
-    IdRoleManager& idRoleManager = IdRoleManager::getInstance();
     TriangulationService& triangulationService = TriangulationService::getInstance();
-    int roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
-    if (roleStatus == 1)
-    {
-      triangulationService.addMeasurement(
-        reinterpret_cast<char*>(incomingSniffData.macAddress), 
-        reinterpret_cast<char*>(incomingSniffData.device_macAddress), 
-        reinterpret_cast<int>(incomingSniffData.RSSI));
-    }
+
+    char deviceMacStr[18];
+    char trackerMacStr[18];
+    snprintf(deviceMacStr, sizeof(deviceMacStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+          incomingSniffData.macAddress[0], incomingSniffData.macAddress[1], incomingSniffData.macAddress[2],
+          incomingSniffData.macAddress[3], incomingSniffData.macAddress[4], incomingSniffData.macAddress[5]);
+    snprintf(trackerMacStr, sizeof(trackerMacStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+          incomingSniffData.device_macAddress[0], incomingSniffData.device_macAddress[1], incomingSniffData.device_macAddress[2],
+          incomingSniffData.device_macAddress[3], incomingSniffData.device_macAddress[4], incomingSniffData.device_macAddress[5]);
+    
+    Serial.printf("Device MAC: %s, Tracker MAC: %s, RSSI: %d\n", deviceMacStr, trackerMacStr, atoi(incomingSniffData.RSSI));
+    
+    triangulationService.addMeasurement(
+      deviceMacStr,
+      trackerMacStr,
+      atoi(incomingSniffData.RSSI));
 
   } else {
     Serial.print("Unknown data size received: ");
