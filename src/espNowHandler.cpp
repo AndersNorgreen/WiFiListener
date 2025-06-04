@@ -46,7 +46,6 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
       Serial.println("Ready to compare roles, managing roles now...");
     } else {
       Serial.println("Not ready to compare roles, waiting...");
-      idRoleManager.manageRoles();
     }
 
     memcpy(&incomingReadings, incomingData, sizeof(incomingReadings));
@@ -203,21 +202,21 @@ void setupEspNow() {
   // get the status of Trasnmitted packet
   esp_now_register_send_cb(OnDataSent);
   esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
+  
   // Register peers
-
-  int lenght = sizeof(broadcastAddresses) / sizeof(broadcastAddresses[0]);
-  for (int i = 0; i < lenght; i++) {
-    if (i == myMacIndex) continue; // Skip own MAC
-    memcpy(peerInfo.peer_addr, broadcastAddresses[i], 6);
-    peerInfo.channel = 0;
-    peerInfo.encrypt = false;
-    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-        Serial.print("Failed to add peer: ");
-        for (int j = 0; j < 6; j++) {
-            Serial.printf("%02X", broadcastAddresses[i][j]);
-            if (j < 5) Serial.print(":");
-        }
-        Serial.println();
-    }
-  }
+  // int lenght = sizeof(broadcastAddresses) / sizeof(broadcastAddresses[0]);
+  // for (int i = 0; i < lenght; i++) {
+  //   if (i == myMacIndex) continue; // Skip own MAC
+  //   memcpy(peerInfo.peer_addr, broadcastAddresses[i], 6);
+  //   peerInfo.channel = 0;
+  //   peerInfo.encrypt = false;
+  //   if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+  //       Serial.print("Failed to add peer: ");
+  //       for (int j = 0; j < 6; j++) {
+  //           Serial.printf("%02X", broadcastAddresses[i][j]);
+  //           if (j < 5) Serial.print(":");
+  //       }
+  //       Serial.println();
+  //   }
+  // }
 }

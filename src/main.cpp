@@ -36,9 +36,9 @@ void setup() {
 
   //mqttManager.init();
 
-  // IdRoleManager& idRoleManager = IdRoleManager::getInstance();
-  // idRoleManager.init();
-  // idRoleManager.manageRoles();
+  IdRoleManager& idRoleManager = IdRoleManager::getInstance();
+  //idRoleManager.init();
+
 
   // Example usage of triangulationService
   // TriangulationService& triangulationService = TriangulationService::getInstance();
@@ -51,10 +51,12 @@ void setup() {
 
   sleep(1);
   // ******************* Sniffing part ***********************
-  // SnifferService& snifferService = SnifferService::getInstance();
-  // snifferService.setUpEspWiFi();
+  SnifferService& snifferService = SnifferService::getInstance();
+  snifferService.setUpEspWiFi();
   // *********************************************************
   setupEspNow();
+  delay(1000); // Ensure ESP-NOW is ready
+  idRoleManager.manageRoles();
   esp_wifi_set_promiscuous(false);
 }
 
@@ -67,44 +69,52 @@ uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1E, 0x1F, 0x18};
 int roleStatus = -1; // Declare roleStatus outside loop to persist its value
 bool isNotmaster = true; // Flag to check if the device is the master
 
+bool hasSlept = false; // Flag to check if the device has slept
+
 void loop() {
   // ********************* Handshake part ***********************
 
-  // IdRoleManager& idRoleManager = IdRoleManager::getInstance();
-  // roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
-  // if (!roleChecked && roleStatus != -1) { 
-  //       if (roleStatus == 1) {
-  //           Serial.println("Yes, You are the Master!");
-  //           Serial.printf("Master MAC: %s\n", masterMac.c_str());
-  //           isNotmaster = false; // Set flag to false if this device is the master
-  //       } else if (roleStatus == 0) {
-  //           Serial.println("No, You are NOT the Master!");
-  //           Serial.printf("Master MAC: %s\n", masterMac.c_str());
-  //       }
-  //       roleChecked = true;
-  //   } 
+  if (!hasSlept) {
+    Serial.println("Waiting for 10 seconds before starting the loop...");
+    sleep(10); // Wait for a second before starting the loop
+    hasSlept = true; // Set the flag to true after the first sleep
+  }
+
+  IdRoleManager& idRoleManager = IdRoleManager::getInstance();
+  roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
+  if (!roleChecked && roleStatus != -1) { 
+        if (roleStatus == 1) {
+            Serial.println("Yes, You are the Master!");
+            Serial.printf("Master MAC: %s\n", masterMac.c_str());
+            isNotmaster = false; // Set flag to false if this device is the master
+        } else if (roleStatus == 0) {
+            Serial.println("No, You are NOT the Master!");
+            Serial.printf("Master MAC: %s\n", masterMac.c_str());
+        }
+        roleChecked = true;
+    } 
   
-  // static bool masterAddressSet = false;
+  static bool masterAddressSet = false;
   
-  // if (!masterAddressSet) {
-  //   if (sscanf(masterMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-  //              &masterAddress[0], &masterAddress[1], &masterAddress[2],
-  //              &masterAddress[3], &masterAddress[4], &masterAddress[5]) == 6) {
-  //       masterAddressSet = true;
-  //   } else {
-  //       Serial.println("Invalid master MAC address format!");
-  //       Serial.printf("Master MAC: %s\n", masterMac.c_str());
-  //   }
-  // }
-  // if (masterAddressSet && isNotmaster) {
-  //   sniffAndSendService.sendSniffMessages(masterAddress);
-  // }
+  if (!masterAddressSet) {
+    if (sscanf(masterMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+               &masterAddress[0], &masterAddress[1], &masterAddress[2],
+               &masterAddress[3], &masterAddress[4], &masterAddress[5]) == 6) {
+        masterAddressSet = true;
+    } else {
+        Serial.println("Invalid master MAC address format!");
+        Serial.printf("Master MAC: %s\n", masterMac.c_str());
+    }
+  }
+  if (masterAddressSet && isNotmaster) {
+    sniffAndSendService.sendSniffMessages(masterAddress);
+  }
 
   
   delay(1000);
 
   // ********************* Master part ***********************
-  Serial.println("waiting for sniff data...");
+  //Serial.println("waiting for sniff data...");
 
 
   // ********************** Sniffing/Slave part ***********************
