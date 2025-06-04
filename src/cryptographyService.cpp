@@ -28,65 +28,85 @@ bool CryptographyService::verifyHash(const char* input, const String& match) {
   return hashedInput == match;
 }
 
-String CryptographyService::encrypt(const String& input) {
+String CryptographyService::encrypt(const String& plaintext) {
   unsigned char iv[IV_LEN];
-  generateIV(iv);
+  for (int i = 0; i < IV_LEN; ++i) iv[i] = random(0, 256);
 
-  mbedtls_aes_context aes;
-  mbedtls_aes_init(&aes);
-  mbedtls_aes_setkey_enc(&aes, key, KEY_LEN * 8);
+  const uint8_t* input = (const uint8_t*)plaintext.c_str();
+  size_t inputLen = plaintext.length();
 
-  size_t inputLen = input.length();
-  size_t paddedLen = inputLen + (16 - (inputLen % 16));
-  unsigned char padded[paddedLen];
-  pkcs7Pad((const unsigned char*)input.c_str(), inputLen, padded, paddedLen);
+  unsigned char ciphertext[inputLen];
+  unsigned char tag[TAG_LEN];
 
-  unsigned char ciphertext[paddedLen];
-  mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_ENCRYPT, paddedLen, iv, padded, ciphertext);
+  mbedtls_gcm_context ctx;
+  mbedtls_gcm_init(&ctx);
+  mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key, KEY_LEN * 8);
 
-  // Combine IV + ciphertext
-  unsigned char finalOutput[IV_LEN + paddedLen];
-  memcpy(finalOutput, iv, IV_LEN);
-  memcpy(finalOutput + IV_LEN, ciphertext, paddedLen);
+  int ret = mbedtls_gcm_crypt_and_tag(
+    &ctx, MBEDTLS_GCM_ENCRYPT, inputLen,
+    iv, IV_LEN,
+    NULL, 0,                 // No AAD
+    input,
+    ciphertext,
+    TAG_LEN, tag
+  );
+
+  mbedtls_gcm_free(&ctx);
+  if (ret != 0) return "Encryption failed";
+
+  // Concatenate IV + ciphertext + tag
+  size_t totalLen = IV_LEN + inputLen + TAG_LEN;
+  unsigned char final[totalLen];
+  memcpy(final, iv, IV_LEN);
+  memcpy(final + IV_LEN, ciphertext, inputLen);
+  memcpy(final + IV_LEN + inputLen, tag, TAG_LEN);
 
   // Base64 encode
-  size_t base64Len;
-  unsigned char base64Out[(IV_LEN + paddedLen) * 4 / 3 + 4];
-  mbedtls_base64_encode(base64Out, sizeof(base64Out), &base64Len, finalOutput, IV_LEN + paddedLen);
-  base64Out[base64Len] = '\0';
+  size_t b64Len;
+  unsigned char b64Out[(totalLen * 4 / 3) + 4];
+  mbedtls_base64_encode(b64Out, sizeof(b64Out), &b64Len, final, totalLen);
+  b64Out[b64Len] = '\0';
 
-  mbedtls_aes_free(&aes);
-  return String((char*)base64Out);
+  return String((char*)b64Out);
 }
 
-String CryptographyService::decrypt(const String& encryptedBase64) {
+String CryptographyService::decrypt(const String& base64Ciphertext) {
   size_t decodedLen;
-  unsigned char decoded[encryptedBase64.length() * 3 / 4 + 1];
-  mbedtls_base64_decode(decoded, sizeof(decoded), &decodedLen, (const unsigned char*)encryptedBase64.c_str(), encryptedBase64.length());
+  unsigned char decoded[base64Ciphertext.length() * 3 / 4 + 1];
 
-  if (decodedLen < IV_LEN) return "Decryption failed: IV too short";
+  int ret = mbedtls_base64_decode(
+    decoded, sizeof(decoded), &decodedLen,
+    (const unsigned char*)base64Ciphertext.c_str(),
+    base64Ciphertext.length()
+  );
 
-  unsigned char iv[IV_LEN];
-  memcpy(iv, decoded, IV_LEN);
+  if (ret != 0 || decodedLen < (IV_LEN + TAG_LEN)) return "Base64 decode failed";
+
+  unsigned char* iv = decoded;
   unsigned char* ciphertext = decoded + IV_LEN;
-  size_t ciphertextLen = decodedLen - IV_LEN;
+  size_t cipherLen = decodedLen - IV_LEN - TAG_LEN;
+  unsigned char* tag = decoded + decodedLen - TAG_LEN;
 
-  mbedtls_aes_context aes;
-  mbedtls_aes_init(&aes);
-  mbedtls_aes_setkey_dec(&aes, key, KEY_LEN * 8);
+  unsigned char output[cipherLen];
 
-  unsigned char decrypted[ciphertextLen];
-  mbedtls_aes_crypt_cbc(&aes, MBEDTLS_AES_DECRYPT, ciphertextLen, iv, ciphertext, decrypted);
+  mbedtls_gcm_context ctx;
+  mbedtls_gcm_init(&ctx);
+  mbedtls_gcm_setkey(&ctx, MBEDTLS_CIPHER_ID_AES, key, KEY_LEN * 8);
 
-  size_t plainLen = ciphertextLen;
-  pkcs7Unpad(decrypted, plainLen);
-  
-  mbedtls_aes_free(&aes);
-  char outputBuffer[plainLen + 1];
-  memcpy(outputBuffer, decrypted, plainLen);
-  outputBuffer[plainLen] = '\0';  // ensure null-termination
+  ret = mbedtls_gcm_auth_decrypt(
+    &ctx, cipherLen,
+    iv, IV_LEN,
+    NULL, 0,
+    tag, TAG_LEN,
+    ciphertext,
+    output
+  );
 
-  return String(outputBuffer);
+  mbedtls_gcm_free(&ctx);
+  if (ret != 0) return "Decryption failed";
+
+  output[cipherLen] = '\0';  // ensure null-terminated
+  return String((char*)output);
 }
 
 void CryptographyService::generateIV(unsigned char* iv) {
@@ -95,27 +115,33 @@ void CryptographyService::generateIV(unsigned char* iv) {
   }
 }
 
-void CryptographyService::pkcs7Unpad(unsigned char* data, size_t& len) {
-  if (len == 0) return;
+bool CryptographyService::pkcs7Unpad(unsigned char* data, size_t& len) {
+  if (len == 0) return false;
 
   size_t pad = data[len - 1];
-  if (pad > 16 || pad > len) return;
+  if (pad == 0 || pad > 16 || pad > len) {
+    Serial.printf("Invalid pad value: %u (len = %u)\n", pad, len);
+    return false;
+  }
 
-  // Verify all pad bytes
   for (size_t i = 0; i < pad; ++i) {
-    if (data[len - 1 - i] != pad) return;  // Invalid padding
+    if (data[len - 1 - i] != pad) {
+      Serial.printf("Padding mismatch at byte %u: got %u, expected %u\n", len - 1 - i, data[len - 1 - i], pad);
+      return false;
+    }
   }
 
   len -= pad;
+  return true;
 }
 
-void CryptographyService::pkcs7Pad(const unsigned char* input, size_t inputLen, unsigned char* output, size_t& outputLen) {
+size_t CryptographyService::pkcs7Pad(const unsigned char* input, size_t inputLen, unsigned char* output) {
   size_t padding = 16 - (inputLen % 16);
   memcpy(output, input, inputLen);
   for (size_t i = 0; i < padding; ++i) {
     output[inputLen + i] = padding;
   }
-  outputLen = inputLen + padding;
+  return inputLen + padding;
 }
 
 void CryptographyService::deriveKey(const char* password) {
