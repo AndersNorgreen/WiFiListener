@@ -34,17 +34,19 @@ void SniffAndSendService::sniffCycleChannels(int millisecs) {
 
 void SniffAndSendService::sendSniffMessages(uint8_t masterAddress[6]) {
   SnifferService& snifferService = SnifferService::getInstance();
-  String (&maclist)[128][5] = snifferService.getMacList();
+  String (&maclist)[128][6] = snifferService.getMacList();
   int length = sizeof(maclist) / sizeof(maclist[0]);
   for (int i = 0; i < length; i++) {
-    if (maclist[i][0] != "") {
+    if (maclist[i][0] != "" && maclist[i][6] != "1") { 
       struct_sniff_message sniffMsg = buildSniffMessage(
         (const uint8_t *)maclist[i][0].c_str(),
         maclist[i][4].c_str(),
         maclist[i][3].c_str(),
         maclist[i][5].c_str());
       sendSniffMessage(sniffMsg, masterAddress);
-      delay(100); // Delay to avoid flooding the network
+      snifferService.setSentStatus(i, "1"); // Update sent status
+      Serial.print("Sent sniff message for MAC: " + maclist[i][0] + "  At: ");
+      Serial.println(i);
     }
   }
 }

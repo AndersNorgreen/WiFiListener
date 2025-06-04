@@ -19,7 +19,8 @@ public:
   void cycleChannelsScan();
 
   // Accessor for maclist
-  String (&getMacList())[128][5];
+  String (&getMacList())[128][6];
+  void setSentStatus(int index, String status);
 
 private:
   SnifferService() {} // Private constructor
@@ -27,7 +28,7 @@ private:
   SnifferService& operator=(const SnifferService&) = delete;
 
   static void sniffer(void* buf, wifi_promiscuous_pkt_type_t type);
-  static String maclist[128][5];
+  static String maclist[128][6];
   static String defaultTTL;
   static int listcount;
   static int curChannel;

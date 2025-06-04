@@ -116,14 +116,12 @@ void loop() {
   // ********************* Master part ***********************
   //Serial.println("waiting for sniff data...");
 
-
   // ********************** Sniffing/Slave part ***********************
   //The slaves should have this line
-  // esp_wifi_set_promiscuous(true);
-  // //sniffAndSendService.sniff(1, 5000);
-  // sniffAndSendService.sniffCycleChannels(5000);
-  // esp_wifi_set_promiscuous(false);
-  
+  esp_wifi_set_promiscuous(true);
+  //sniffAndSendService.sniff(1, 5000);
+  sniffAndSendService.sniffCycleChannels(5000);
+  esp_wifi_set_promiscuous(false);
 
   // sniffAndSendService.sendSniffMessages(masterAddress); 
 }
