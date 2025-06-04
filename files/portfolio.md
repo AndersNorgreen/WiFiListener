@@ -1,8 +1,24 @@
-# Portfolio (Søren, Affe, Michael og Anders)
+# Portfolio (Søren, Afshin, Michael og Anders)
 
 ## Hvordan ser løsningen ud
 - [ ] Arkitektur
+
+#### Role Manager
+Den nemme løsning ville være at hardcode en specifik ESP-enheds MAC-adresse, som så ville modtage pakker fra de andre ESP-enheder. Det ville være det simpleste, men den optimale løsning er, at den centrale ESP-enhed vælges dynamisk gennem en form for lodtrækning.
+
+Når projektet starter op, genererer hver enhed et tilfældigt ID-nummer mellem 1 og 1.000.000. Enhederne begynder derefter at broadcaste deres ID’er til de øvrige tilstedeværende enheder, samtidig med at de modtager ID’er fra de andre.
+
+I tilfælde af en kollision *(to eller flere enheder har samme ID)*, genererer de pågældende enheder et nyt ID, indtil alle ID’er er unikke.
+
+Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID tildeles rollen som **central enhed**.
+
 - [ ] Teknologier
+  - Mindst 4 ESP32 enheder
+  - Visual Studio Code
+  - PlatformIO (VS Code Extension)
+  - DrawIO (VS Code Extension)
+  - MQTT Server
+  - Docker Server
 
 ![WifiListener Diagram](./diagrams/WiFiSnifferDiagram_export.png)
 
