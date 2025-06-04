@@ -18,8 +18,6 @@
 ServerManager serverManager;
 WifiConfig wifiConfig;
 MqttManager mqttManager;
-TriangulationService triangulationService;
-IdRoleManager idRoleManager;
 SniffAndSendService sniffAndSendService;
 CryptographyService cryptographyService;
 
@@ -38,7 +36,6 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
-  // TODO get mqttServer running
   //mqttManager.init();
   String hash = cryptographyService.hash("Hash mig!");
   Serial.println("Hash: " + hash);
@@ -47,28 +44,84 @@ void setup() {
   String encrypted = cryptographyService.encrypt("Krypter mig!");
   Serial.println("Kryptered: " + encrypted);
   String decrypted = cryptographyService.decrypt(encrypted);
-  Serial.println("Dekrypteret: " + decrypted);
+  Serial.println("Dekrypteret: " + decrypted);  // IdRoleManager& idRoleManager = IdRoleManager::getInstance();
+  // idRoleManager.init();
+  // idRoleManager.manageRoles();
+
   // Example usage of triangulationService
-//  triangulationService.enableMockData(true);
-//  const auto& positions = triangulationService.getDevicePositions(false);
-//  Serial.println("Device positions from triangulationService:");
-//  for (const auto& info : positions) {
-//      Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
-//  }
+//  // TriangulationService& triangulationService = TriangulationService::getInstance();
+  // triangulationService.enableMockData(true);
+//  // const auto& positions = triangulationService.getDevicePositions(false);
+//  // Serial.println("Device positions from triangulationService:");
+//  // for (const auto& info : positions) {
+//  //   Serial.printf("MAC: %s, Position: (%d, %d)\n", info.mac, info.position.x, info.position.y);
+//  // }
 //
-//  SnifferService& snifferService = SnifferService::getInstance();
-//  snifferService.setUpEspWiFi();
-//  setupEspNow();
-//  esp_wifi_set_promiscuous(false); 
+//  sleep(1);
+  // ******************* Sniffing part ***********************
+  // SnifferService& snifferService = SnifferService::getInstance();
+//  // snifferService.setUpEspWiFi();
+//  // *********************************************************
+  setupEspNow();
+//  esp_wifi_set_promiscuous(false);
 }
 
-void loop() {
-  esp_wifi_set_promiscuous(true);
-  //sniffAndSendService.sniff(1, 5000);
-  sniffAndSendService.sniffCycleChannels(5000);
-  esp_wifi_set_promiscuous(false);
+bool roleChecked = false;
+String masterMac;
 
-  //TODO get the master address from the coordinated service
-  uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1C, 0xA8, 0x6C}; 
-  sniffAndSendService.sendSniffMessages(masterAddress);
+// Example master MAC address, replace with handshake logic to get the actual master MAC
+uint8_t masterAddress[6] = {0xCC, 0xDB, 0xA7, 0x1E, 0x1F, 0x18};
+
+int roleStatus = -1; // Declare roleStatus outside loop to persist its value
+bool isNotmaster = true; // Flag to check if the device is the master
+
+void loop() {
+  // ********************* Handshake part ***********************
+
+  // IdRoleManager& idRoleManager = IdRoleManager::getInstance();
+  // roleStatus = idRoleManager.checkAndCompareRoles(masterMac);
+  // if (!roleChecked && roleStatus != -1) { 
+  //       if (roleStatus == 1) {
+  //           Serial.println("Yes, You are the Master!");
+  //           Serial.printf("Master MAC: %s\n", masterMac.c_str());
+  //           isNotmaster = false; // Set flag to false if this device is the master
+  //       } else if (roleStatus == 0) {
+  //           Serial.println("No, You are NOT the Master!");
+  //           Serial.printf("Master MAC: %s\n", masterMac.c_str());
+  //       }
+  //       roleChecked = true;
+  //   } 
+  
+  // static bool masterAddressSet = false;
+  
+  // if (!masterAddressSet) {
+  //   if (sscanf(masterMac.c_str(), "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+  //              &masterAddress[0], &masterAddress[1], &masterAddress[2],
+  //              &masterAddress[3], &masterAddress[4], &masterAddress[5]) == 6) {
+  //       masterAddressSet = true;
+  //   } else {
+  //       Serial.println("Invalid master MAC address format!");
+  //       Serial.printf("Master MAC: %s\n", masterMac.c_str());
+  //   }
+  // }
+  // if (masterAddressSet && isNotmaster) {
+  //   sniffAndSendService.sendSniffMessages(masterAddress);
+  // }
+
+  
+  delay(1000);
+
+  // ********************* Master part ***********************
+  Serial.println("waiting for sniff data...");
+
+
+  // ********************** Sniffing/Slave part ***********************
+  //The slaves should have this line
+  // esp_wifi_set_promiscuous(true);
+  // //sniffAndSendService.sniff(1, 5000);
+  // sniffAndSendService.sniffCycleChannels(5000);
+  // esp_wifi_set_promiscuous(false);
+  
+
+  // sniffAndSendService.sendSniffMessages(masterAddress); 
 }

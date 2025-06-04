@@ -44,6 +44,7 @@ void SniffAndSendService::sendSniffMessages(uint8_t masterAddress[6]) {
         maclist[i][3].c_str(),
         maclist[i][5].c_str());
       sendSniffMessage(sniffMsg, masterAddress);
+      delay(100); // Delay to avoid flooding the network
     }
   }
 }

@@ -7,13 +7,19 @@
 
 #include "mqttTopic.h"
 #include "config.h"
+#include <vector>
+#include <WiFiClientSecure.h>
+#include <triangulationService.h>
 
 class MqttManager {
     public: 
         MqttManager();
 
         void init();
-        void submit(MqttTopic topic);
+        void initAuth();
+        void submitTopic(MqttTopic topic);
+        void submitTopics(std::vector<MqttTopic> topics);
+        std::vector<MqttTopic> convertToTopics(std::vector<DeviceInfo> deviceData);
         void loop();
     private:
         const char* _server = MQTT_SERVER;
@@ -22,7 +28,7 @@ class MqttManager {
         const char* _user = MQTT_USER;
         const char* _password = MQTT_PASSWORD;
 
-        WiFiClient _espClient;
+        WiFiClientSecure _espClient;
         PubSubClient _client = PubSubClient(_espClient);
 };
 

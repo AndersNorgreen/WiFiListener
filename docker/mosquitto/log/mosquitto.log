@@ -1,0 +1,12 @@
+1748935560: mosquitto version 2.0.21 starting
+1748935560: Config loaded from /mosquitto/config/mosquitto.conf.
+1748935560: Error: Unable to open pwfile "/mosquitto/config/passwordfile".
+1748935560: Error opening password file "/mosquitto/config/passwordfile".
+1748935667: mosquitto version 2.0.21 starting
+1748935667: Config loaded from /mosquitto/config/mosquitto.conf.
+1748935667: Error: Unable to open pwfile "/mosquitto/config/passwordfile".
+1748935667: Error opening password file "/mosquitto/config/passwordfile".
+1748935730: mosquitto version 2.0.21 starting
+1748935730: Config loaded from /mosquitto/config/mosquitto.conf.
+1748935730: Error: Unable to open pwfile "/mosquitto/config/passwordfile".
+1748935730: Error opening password file "/mosquitto/config/passwordfile".
