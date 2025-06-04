@@ -45,7 +45,27 @@ Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID ti
 
 
   - [ ] hvad er risikoen ved at behandle andre folks personlige data?
+
+  Den dataansvarlige skal allerede før behandling af personfølsomme data, have forstået risikoen over for de "registreredes" rettigheder, og så have en afvejning af disse risici i forhold til de forholdsregler, der bliver truffet for at beskytte disse rettigheder. 
+
+  Nogle af de vigtigeste risici er: 
+
+  **Privatlivsbrud**
+
+    - Data kan medføre til identitetstyveri eller misbrug af personlige oplysninger
+
+  **Juridiske konsekvenser**
+
+    - GDPR kræver at at personfølsome data behandles korrekt. Brud kan medføre store bøder.
   
+  **Tab af tillid**
+
+    - Uansvarligt håndtering af data, kan skade organisationers ry og relationer med kunder og medarbejder.
+  
+  **Cyberangreb**
+
+    - Dårlig sikkerhed kan føre til hackerangreb, hvor data bliver stjålet eller lækket. 
+
   - [ ] i hvor høj grad er de data projektet benytter personlige?
   
   Det kan diskuteres, i hvor høj grad det data, som benyttes i nærværende projekt, er beskyttet under GDPR. Der er hovedsageligt tale om MAC-adresser og positionsdata. 
