@@ -159,12 +159,12 @@ void IdRoleManager::manageRoles() {
         esp_now_add_peer(&peerInfo);
     }
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 30; i++) {
         esp_err_t result = esp_now_send(broadcastMac, (uint8_t*)&outMsg, sizeof(outMsg));
         if (result == ESP_OK) {
-            Serial.printf("Broadcasted ID to all peers (%d/10)\n", i + 1);
+            Serial.printf("Broadcasted ID to all peers (%d/30)\n", i + 1);
         } else {
-            Serial.printf("Failed to broadcast ID (%d/10)\n", i + 1);
+            Serial.printf("Failed to broadcast ID (%d/30)\n", i + 1);
         }
         delay(1000); 
     }
