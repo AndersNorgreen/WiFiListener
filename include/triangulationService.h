@@ -14,6 +14,8 @@ struct DeviceInfo {
 
 class TriangulationService {
 public:
+    static TriangulationService& getInstance();
+
     void enableMockData(bool enable);
     void addOrUpdateDeviceTracker(const char* mac, const DevicePosition* position = nullptr);
     const std::vector<DeviceInfo>& getDevicePositions(bool clearList = true);
@@ -25,6 +27,10 @@ public:
     static constexpr int MIN_REQUIRED_UNIQUE_TRACKERS = 3;
 
 private:
+    TriangulationService() {};
+    TriangulationService(const TriangulationService&) = delete;
+    TriangulationService& operator=(const TriangulationService&) = delete;
+
     struct DeviceTrackerInfo {
         char mac[18];
         bool isActive;

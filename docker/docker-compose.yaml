@@ -1,0 +1,40 @@
+version: "3.1"
+services:
+
+  nodered:
+    image: nodered/node-red
+    hostname: node-red
+    container_name: node-red
+    networks:
+    - mynet
+    environment:
+    - SERVICE_NAME=node-red
+    ports:
+    - "1880:1880"
+    volumes:
+      - ./nodered_data:/data
+    links:
+    - mosquitto
+
+  mosquitto:
+    image: eclipse-mosquitto
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/cert:/mosquitto/cert
+    networks:
+      - mynet
+
+networks:
+  mynet:
+      # use the bridge driver, but enable IPv6
+      driver: bridge
+      driver_opts:
+          com.docker.network.enable_ipv6: "true"
