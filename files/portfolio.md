@@ -56,7 +56,7 @@ Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID ti
 
   **Juridiske konsekvenser**
 
-    - GDPR kræver at at personfølsome data behandles korrekt. Brud kan medføre store bøder.
+    - GDPR kræver at at personfølsomme data behandles korrekt. Brud kan medføre store bøder.
   
   **Tab af tillid**
 
@@ -90,5 +90,15 @@ Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID ti
 
 ### Beskyttelse
   - [ ] hvem kan få adgang?
+
+  Dem der har adgang til personfølsomme oplysninger er, dem, hvis oplysningerne tilhøre og handler om. 
+
+  Så hvis en person, hvis data man behandler, bliver bedt om at få adgang til deres oplysninger, så skal vedkommende have adgang. 
+
   - [ ] hvor svært er det for udenforstående at skaffe sig adgang til data?
+
+  Som sagt før, hvis vedkommende beder om oplysninger der handler og tilhøre dem, så skal de have adgang til dem. Det bliver dog noget vanskeligt, da de fleste vil anmode om adgang via telefonopkald eller via email. 
+  
+  Her kan man ikke verificere vedkommendes identitet og i værste tilfælde kan man give adgang til følsomme oplysninger til en anden. Hackere bliver endnu bedre til at efterligne andre mennesker.
+
   - [ ] eller at lytte med?
