@@ -51,13 +51,13 @@ void TriangulationService::addOrUpdateDeviceTracker(const char *mac, const Devic
             tracker.isActive = true;
             if (position)
                 tracker.position = *position;
-            Serial.printf("[TRACKER] Updated tracker %s\n", mac);
+            //Serial.printf("[TRACKER] Updated tracker %s\n", mac);
             return;
         }
     }
     if (!position)
     {
-        Serial.printf("[TRACKER] Error: Cannot add tracker %s without position!\n", mac);
+        //Serial.printf("[TRACKER] Error: Cannot add tracker %s without position!\n", mac);
         return;
     }
     DeviceTrackerInfo newTracker;
@@ -67,7 +67,7 @@ void TriangulationService::addOrUpdateDeviceTracker(const char *mac, const Devic
     newTracker.lastSeenTimestamp = millis();
     newTracker.position = *position;
     deviceTrackers.push_back(newTracker);
-    Serial.printf("[TRACKER] Added new tracker %s\n", mac);
+    //Serial.printf("[TRACKER] Added new tracker %s\n", mac);
 }
 
 DeviceInfo *TriangulationService::findOrCreateDeviceInfo(const char *mac)
@@ -111,6 +111,13 @@ void TriangulationService::clearDeviceMeasurementsFor(const char *deviceMac)
 
 DevicePosition TriangulationService::tryCalculateDevicePosition(const char *deviceMac)
 {
+    if (deviceTrackers.empty()) {
+      addOrUpdateDeviceTracker((char*)"CC:DB:A7:12:51:0C", new DevicePosition{10, 20});
+      addOrUpdateDeviceTracker((char*)"CC:DB:A7:1E:1F:18", new DevicePosition{20, 30});
+      addOrUpdateDeviceTracker((char*)"CC:DB:A7:1D:FD:FC", new DevicePosition{30, 40});
+      addOrUpdateDeviceTracker((char*)"CC:DB:A7:1C:A8:6C", new DevicePosition{40, 50});
+    }
+    
     long now = millis();
     std::vector<DeviceMeasurement> relevant;
     std::vector<std::string> uniqueTrackers;
@@ -126,9 +133,14 @@ DevicePosition TriangulationService::tryCalculateDevicePosition(const char *devi
         }
     }
 
+    //Serial.printf("[TRIANGULATION][DEBUG] Found %d relevant measurements for device %s\n", (int)relevant.size(), deviceMac);
+    for (const auto& m : relevant) {
+        //Serial.printf("[TRIANGULATION][DEBUG] Measurement: trackerMac=%s, rssi=%d, timestamp=%ld\n", m.trackerMac, m.rssi, m.timestamp);
+    }
+
     if (uniqueTrackers.size() < MIN_REQUIRED_UNIQUE_TRACKERS)
     {
-        Serial.printf("[TRIANGULATION] Not enough unique trackers for device %s (%d found)\n", deviceMac, (int)uniqueTrackers.size());
+        //Serial.printf("[TRIANGULATION] Not enough unique trackers for device %s (%d found)\n", deviceMac, (int)uniqueTrackers.size());
         return {0, 0}; // Not enough data
     }
 
@@ -150,32 +162,37 @@ DevicePosition TriangulationService::tryCalculateDevicePosition(const char *devi
 
         if (trackerIt != deviceTrackers.end())
         {
-            // Convert RSSI to a positive weight (stronger signal = higher weight)
-            float weight = 127 + measurement.rssi; // e.g., -40 RSSI -> 87 weight
+            float weight = 127 + measurement.rssi;
             if (weight < 1)
-                weight = 1; // Ensure minimum weight is 1
+                weight = 1;
 
-            // Accumulate weighted positions
+            //Serial.printf("[TRIANGULATION][DEBUG] Tracker found: %s at (%d, %d), weight=%.2f\n",
+            //    trackerIt->mac, trackerIt->position.x, trackerIt->position.y, weight);
+
             weightedSumX += trackerIt->position.x * weight;
             weightedSumY += trackerIt->position.y * weight;
             totalWeight += weight;
         }
+        else
+        {
+            //Serial.printf("[TRIANGULATION][DEBUG] Tracker NOT found for trackerMac=%s\n", measurement.trackerMac);
+        }
     }
 
-    // If no valid weights, we cannot estimate the position
+    //Serial.printf("[TRIANGULATION][DEBUG] weightedSumX=%.2f, weightedSumY=%.2f, totalWeight=%.2f\n", weightedSumX, weightedSumY, totalWeight);
+
     if (totalWeight == 0)
     {
-        Serial.printf("[TRIANGULATION] No valid tracker positions for device %s\n", deviceMac);
+        //Serial.printf("[TRIANGULATION] No valid tracker positions for device %s\n", deviceMac);
         return {0, 0};
     }
 
-    // Calculate the weighted average (centroid) position
     DevicePosition estimatedPosition = {
         static_cast<int>(weightedSumX / totalWeight),
         static_cast<int>(weightedSumY / totalWeight)};
 
-    Serial.printf("[TRIANGULATION] Device %s position calculated: (%d, %d)\n",
-                  deviceMac, estimatedPosition.x, estimatedPosition.y);
+    //Serial.printf("[TRIANGULATION] Device %s position calculated: (%d, %d)\n",
+    //              deviceMac, estimatedPosition.x, estimatedPosition.y);
 
     return estimatedPosition;
 }
@@ -202,7 +219,7 @@ void TriangulationService::addMeasurement(char deviceMac[18], char trackerMac[18
                 return (currentTime - m.timestamp) > MAX_TRACKING_LIFETIME_SECONDS * 1000;
             }),
         deviceMeasurements.end());
-    Serial.printf("Added measurement for %s from tracker %s (RSSI: %d)\n", deviceMac, trackerMac, rssi);
+    //Serial.printf("Added measurement for %s from tracker %s (RSSI: %d)\n", deviceMac, trackerMac, rssi);
 
     // Try to calculate position for device
     DevicePosition pos = tryCalculateDevicePosition(deviceMac);
@@ -210,7 +227,7 @@ void TriangulationService::addMeasurement(char deviceMac[18], char trackerMac[18
     {
         DeviceInfo *info = findOrCreateDeviceInfo(deviceMac);
         info->position = pos;
-        Serial.printf("Updated/added device %s at (%d, %d)\n", deviceMac, pos.x, pos.y);
+        //Serial.printf("Updated/added device %s at (%d, %d)\n", deviceMac, pos.x, pos.y);
         clearDeviceMeasurementsFor(deviceMac); // Clear measurements for device to avoid duplicates
     }
 }

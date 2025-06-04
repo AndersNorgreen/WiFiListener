@@ -34,8 +34,6 @@ void setup() {
   serverManager.updateWifiConfig(wifiConfig);
   serverManager.initServer();
 
-  //mqttManager.init();
-
   IdRoleManager& idRoleManager = IdRoleManager::getInstance();
   //idRoleManager.init();
 
@@ -70,10 +68,10 @@ int roleStatus = -1; // Declare roleStatus outside loop to persist its value
 bool isNotmaster = true; // Flag to check if the device is the master
 
 bool hasSlept = false; // Flag to check if the device has slept
+bool offloadData = false;
 
 void loop() {
   // ********************* Handshake part ***********************
-
   if (!hasSlept) {
     Serial.println("Waiting for 10 seconds before starting the loop...");
     sleep(10); // Wait for a second before starting the loop
@@ -106,22 +104,24 @@ void loop() {
         Serial.printf("Master MAC: %s\n", masterMac.c_str());
     }
   }
+
   if (masterAddressSet && isNotmaster) {
     sniffAndSendService.sendSniffMessages(masterAddress);
   }
 
+  TriangulationService& triangulationService = TriangulationService::getInstance();
+  std::vector<DeviceInfo> positionData = triangulationService.getDevicePositions(false);
+  if(masterAddressSet && !isNotmaster && positionData.size() > 20) {
+    mqttManager.initAuth();
+    mqttManager.submitTopics(mqttManager.convertToTopics(positionData));
+    triangulationService.getDevicePositions();
+  }
   
   delay(1000);
 
-  // ********************* Master part ***********************
-  //Serial.println("waiting for sniff data...");
 
-  // ********************** Sniffing/Slave part ***********************
-  //The slaves should have this line
   esp_wifi_set_promiscuous(true);
-  //sniffAndSendService.sniff(1, 5000);
   sniffAndSendService.sniffCycleChannels(5000);
   esp_wifi_set_promiscuous(false);
 
-  // sniffAndSendService.sendSniffMessages(masterAddress); 
 }

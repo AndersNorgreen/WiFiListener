@@ -136,7 +136,7 @@ void IdRoleManager::init() {
 // Managing roles and sending IDs to peers
 void IdRoleManager::manageRoles() {
     idGenerator.initId();
-    snprintf(myId, sizeof(myId), "%d", idGenerator.getRandomID());
+    snprintf(myId, sizeof(myId), "%d", 1);
 
     macAddress = WiFi.macAddress(); // Refresh
 

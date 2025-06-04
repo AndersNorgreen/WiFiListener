@@ -16,7 +16,7 @@
 
 // MQTT Server Egen
 //#define MQTT_SERVER "mosquitto.eclipse"
-#define MQTT_SERVER "192.168.0.204"
+#define MQTT_SERVER "192.168.0.205"
 #define MQTT_PORT 8883
 #define MQTT_USER "esp32"
 #define MQTT_PASSWORD "1234"
