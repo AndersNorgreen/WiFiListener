@@ -25,11 +25,23 @@ Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID ti
 ![WifiListener Flowchart](./diagrams/WiFiSnifferFlowchart_export.png)
 
 ## Dataprocess
-- [ ] primær dataopsamling  
+- [ ] primær dataopsamling
+  Vores ESP forhandler om hvem der skal være master via IdRoleManager. Masteren indsamler så data fra de andre ESP32 enheder i netværket
+  og sender det til en MQTT server 
+
 - [ ] data berigelse
+  Vi foretager begrænset berigelse af data. Vi ESP32 master står for at indsamle de enkelte målinger som den bruger til at
+  beregne en ca. position for devicen. Derfra bliver der sendt følgende information til MQTT: GUID, Position (x,y).
+
 - [ ] beregning
+  Beregning af position bliver foretaget når der er nok relevante registreringer til at foretage en triangulering. Så der skal være nok
+  device trackers. Og deres målinger skal være tæt nok på hinnanden. Når master har nok målinger til at lave en beregning så bruger den en
+  vægtet tyndgepunkt for at give os en estimering på hvor en given device befinder sig. Dette gør at des flere tracker vi har i systemet. Det
+  mere præcis burde vores beregninger blive.
+
 - [ ] data lagring
 Umiddelbart lagrer det nuværende projekt ikke data i længere tid af gangen, men sletter det efter afsendelse til den centrale MQTT-server. Det er dog muligt både at gemme data i kortere tid i hukommelsen og gennem længere tid på det oprettede LittleFS drev.
+
 - [ ] evt data visualisering
 Vores Esp32 er sat op til, at kunne vise indsamlet data på en dertil oprettet wifi-server og chart.js. Der har dog desværre ikke været tid til at færdiggøre denne del af projektet. Data ville kunne sendes (og downloades) som csv-fil, men også i realtime via en socket.
 
