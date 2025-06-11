@@ -25,11 +25,13 @@ Når alle ID’er er unikke, sammenlignes de, og den enhed med det laveste ID ti
 ![WifiListener Flowchart](./diagrams/WiFiSnifferFlowchart_export.png)
 
 ## Dataprocess
-- [ ] primær dataopsamling
+- [ ] primær dataopsamling  
 - [ ] data berigelse
 - [ ] beregning
 - [ ] data lagring
+Umiddelbart lagrer det nuværende projekt ikke data i længere tid af gangen, men sletter det efter afsendelse til den centrale MQTT-server. Det er dog muligt både at gemme data i kortere tid i hukommelsen og gennem længere tid på det oprettede LittleFS drev.
 - [ ] evt data visualisering
+Vores Esp32 er sat op til, at kunne vise indsamlet data på en dertil oprettet wifi-server og chart.js. Der har dog desværre ikke været tid til at færdiggøre denne del af projektet. Data ville kunne sendes (og downloades) som csv-fil, men også i realtime via en socket.
 
 ## Datasikkerhed
 
